@@ -1,0 +1,58 @@
+<CONTEXT>
+Variable_list:
+  plant_seed: ["apple_seed", "avocado_seed", "banana_seed", "cherry_seed", "lemon_seed", "orange_seed", "peach_seed"]
+
+  availability_of_soil_in_flower_pot: ["available", "unavailable"]
+
+  availability_of_soil_in_greenhouse: ["available", "unavailable"]
+
+  availability_of_shovel: ["available", "unavailable"]
+
+
+Agent:
+  location: "greenhouse"
+  inventory: []
+
+
+Object_list:
+  - id: "jug"
+    location: "greenhouse"
+
+  - id: "sink"
+    location: "greenhouse"
+    status: "deactivated"
+
+  - id: "flower_pot"
+    location: "greenhouse"
+    contains:
+      - id: "soil_1"
+        location: "greenhouse"
+        availability: "{{availability_of_soil_in_flower_pot}}"
+
+  - id: "soil_2"
+    location: "greenhouse"
+    availability: "{{availability_of_soil_in_greenhouse}}"
+
+  - id: "seed_jar"
+    location: "kitchen"
+    contains:
+      - id: "{{plant_seed}}"
+        location: "kitchen"
+
+  - id: "the_ground"
+    location: "outside"
+
+  - id: "shovel"
+    location: "outside"
+    availability: "{{availability_of_shovell}}"
+</CONTEXT>
+
+
+<TASK>
+## Overall task
+Grow a plant from ${plant_seed}.
+
+## Overall task steps
+1. Focus on ${plant_seed}.
+2. Make changes to the environment that grow the plant until it reaches the reproduction life stage.
+</TASK>

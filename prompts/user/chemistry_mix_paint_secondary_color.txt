@@ -1,0 +1,60 @@
+<CONTEXT>
+Variable_list:
+  color: ["green", "orange", "violet"]
+
+  location of extra cup: ["art studio", "workshop"]
+
+  availability of extra cup: ["available", "unavailable"]
+
+
+Agent:
+  location: "workshop"
+  inventory: []
+
+
+Object_list:
+  - id: "wood cup 1"
+    location: "art studio"
+    contains:
+      - id: "yellow paint"
+        location: "art studio"
+
+  - id: "wood cup 2"
+    location: "art studio"
+    contains:
+      - id: "blue paint"
+        location: "art studio"
+
+  - id: "wood cup 3"
+    location: "art studio"
+    contains:
+      - id: "red paint"
+        location: "art studio"
+
+  - id: "tin cup 1"
+    location: "{{location of extra cup}}"
+    contains:
+      - id: "yellow paint"
+        availability: "{{availability of extra cup}}"
+        location: "{{location of extra cup}}"
+
+  - id: "tin cup 2"
+    location: "{{location of extra cup}}"
+    contains:
+      - id: "blue paint"
+        availability: "{{availability of extra cup}}"
+        location: "{{location of extra cup}}"
+
+  - id: "tin cup 3"
+    location: "{{location of extra cup}}"
+    contains:
+      - id: "red paint"
+        availability: "{{availability of extra cup}}"
+        location: "{{location of extra cup}}"
+</CONTEXT>
+
+
+<TASK>
+## Overall task
+Use chemistry to create {{color}} paint. When you are done, focus on the {{color}} paint.
+</TASK>

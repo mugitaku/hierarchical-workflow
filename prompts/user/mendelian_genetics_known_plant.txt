@@ -1,0 +1,55 @@
+<CONTEXT>
+Variable_list:
+  trait: ["tall_plant_height", "short_plant_height", "round_seed_shape", "wrinkly_seed_shape", "green_seed_color", "yellow_seed_color"]
+
+  two_answer_boxes: [["red_box", "green_box"],
+             ["green_box", "blue_box"],
+             ["blue_box", "orange_box"]]
+
+
+Agent:
+  location: "greenhouse"
+  inventory: []
+
+
+Object_list:
+  - id: "seed_jar"
+    location: "greenhouse"
+    contains:
+      - id: "round_green_pea_seed_(tall_plant_height)"
+        location: "greenhouse"
+
+      - id: "wrinkly_yellow_pea_seed_(short_plant_height)"
+        location: "greenhouse"
+
+  - id: "flower_pot_1"
+    location: "greenhouse"
+
+  - id: "flower_pot_2"
+    location: "greenhouse"
+
+  - id: "flower_pot_3"
+    location: "greenhouse"
+
+  - id: "flower_pot_4"
+    location: "greenhouse"
+
+  - id: "bee_hive"
+    location: "greenhouse"
+
+  - id: "jug"
+    location: "greenhouse"
+
+  - id: "sink"
+    location: "greenhouse"
+    status: "deactivated"
+
+  - id: "{{two_answer_boxes}}"
+    location: "greenhouse"
+</CONTEXT>
+
+
+<TASK>
+## Overall task
+Determine whether {{trait}} is a dominant or recessive trait in the pea plant. If the trait is dominant, focus on {{two_answer_boxes}}[0]. If the trait is recessive, focus on {{two_answer_boxes}}[1].
+</TASK>

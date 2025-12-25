@@ -1,0 +1,97 @@
+<CONTEXT>
+Variable_list:
+  object_to_test: ["water", "chocolate", "Gallium", "orange_juice", "Mercury", "Tin"]
+
+  temperature_point: [-10, 10, 50, 150, 200]
+
+  two_answer_boxes: [["red", "green"],
+             ["green", "blue"],
+             ["blue", "orange"],
+             ["orange", "yellow"],
+             ["yellow", "red"]]
+
+
+Agent:
+  location: "kitchen"
+  inventory: []
+  info: you do not know the melting point of object_to_test.
+
+
+Object_list:
+  - id: "fridge"
+    location: "kitchen"
+    status: "closed"
+    contains:
+      - id: "chocolate"
+        location: "kitchen"
+        status: "solid"
+
+      - id: "wood_cup"
+        location: "kitchen"
+        contains:
+          - id: "orange_juice"
+            location: "kitchen"
+            status: "liquid"
+
+  - id: "freezer"
+    location: "kitchen"
+    status: "closed"
+
+  - id: "sink"
+    location: "kitchen"
+    status: "deactivated"
+
+  - id: "cupboard"
+    location: "kitchen"
+    status: "closed"
+    contains:
+      - id: "metal_pot_1"
+        location: "kitchen"
+
+  - id: "stove"
+    location: "kitchen"
+    status: "deactivated"
+
+  - id: "metal_pot_2"
+    location: "kitchen"
+    contains:
+      - id: "Lead"
+        status: "solid"
+        location: "kitchen"
+
+  - id: "ceramic_cup"
+    location: "kitchen"
+    contains:
+      - id: "Tin"
+        status: "solid"
+        location: "kitchen"
+
+  - id: "tin_cup"
+    location: "kitchen"
+    contains:
+      - id: "Mercury"
+        status: "liquid"
+        location: "kitchen"
+
+  - id: "thermometer"
+    location: "kitchen"
+
+  - id: "Gallium"
+    status: "solid"
+    location: "kitchen"
+
+  - id: "{{two_answer_boxes}}"
+    location: "kitchen"
+</CONTEXT>
+
+
+<TASK>
+## Overall task
+Measure the melting point of {{object_to_test}}.
+
+## Overall task steps
+1. focus on the thermometer.
+2. focus on {{object_to_test}}.
+3. measure the melting point of {{object_to_test}}.
+4. If the measurement result is above {{temperature_point}} degrees, focus on the {{two_answer_boxes}}[0] box. If the measurement result is below {{temperature_point}} degrees, focus on the {{two_answer_boxes}}[1] box.
+</TASK>
