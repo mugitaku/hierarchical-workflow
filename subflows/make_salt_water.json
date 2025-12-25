@@ -1,0 +1,18 @@
+{
+  "task": "make salt water",
+  "objects": ["${container} of water", "salt"],
+  "steps": [
+    {
+      "sid": "move_salt_to_container",
+      "step_type": "action",
+      "action": "move salt to ${container} of water",
+      "next_sid": "loop_rooms"
+    },
+    {
+      "sid": "mix_container",
+      "step_type": "action",
+      "action": "mix ${container}",
+      "next_sid": ""
+    }
+  ]
+}
