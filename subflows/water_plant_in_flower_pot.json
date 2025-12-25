@@ -1,0 +1,30 @@
+{
+  "task": "water plant in flower pot",
+  "objects": ["${container}", "water", "flower pot"],
+  "steps": [
+    {
+      "sid": "fill_container_with_water",
+      "step_type": "action",
+      "action": "fill ${container} with water",
+      "next_sid": "pour_container_into_flower_pot"
+    },
+    {
+      "sid": "pour_container_into_flower_pot",
+      "step_type": "action",
+      "action": "pour ${container} into flower pot",
+      "next_sid": "wait"
+    },
+    {
+      "sid": "wait",
+      "step_type": "action",
+      "action": "wait",
+      "next_sid": "examine_flower_pot"
+    },
+    {
+      "sid": "examine_flower_pot",
+      "step_type": "action",
+      "action": "examine flower pot",
+      "next_sid": ""
+    }
+  ]
+}

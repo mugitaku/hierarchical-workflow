@@ -1,0 +1,30 @@
+{
+  "task": "fill container with water",
+  "objects": ["${container}", "sink"],
+  "steps": [
+    {
+      "sid": "move_container_to_sink",
+      "step_type": "action",
+      "action": "move ${container} to sink",
+      "next_sid": "activate_sink"
+    },
+    {
+      "sid": "activate_sink",
+      "step_type": "action",
+      "action": "activate sink",
+      "next_sid": "deactivate_sink"
+    },
+    {
+      "sid": "deactivate_sink",
+      "step_type": "action",
+      "action": "deactivate sink",
+      "next_sid": "pick_up_container"
+    },
+    {
+      "sid": "pick_up_container",
+      "step_type": "action",
+      "action": "pick up ${container}",
+      "next_sid": ""
+    }
+  ]
+}

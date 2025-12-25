@@ -1,0 +1,36 @@
+{
+  "task": "heat object with heater",
+  "objects": ["${object}", "${heater}"],
+  "steps": [
+    {
+      "sid": "move_object_to_heater",
+      "step_type": "action",
+      "action": "move ${object} to ${heater}",
+      "next_sid": "activate_heater"
+    },
+    {
+      "sid": "activate_heater",
+      "step_type": "action",
+      "action": "activate ${heater}",
+      "next_sid": "wait"
+    },
+    {
+      "sid": "wait",
+      "step_type": "action",
+      "action": "wait",
+      "next_sid": "deactivate_heater"
+    },
+    {
+      "sid": "deactivate_heater",
+      "step_type": "action",
+      "action": "deactivate ${heater}",
+      "next_sid": "pick_up_object"
+    },
+    {
+      "sid": "pick_up_object",
+      "step_type": "action",
+      "action": "pick up ${object}",
+      "next_sid": ""
+    }
+  ]
+}

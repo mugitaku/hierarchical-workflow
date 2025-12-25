@@ -1,0 +1,18 @@
+{
+  "task": "pollinate flower with bee hive",
+  "objects": ["flower 1", "flower 2", "bee hive"],
+  "steps": [
+    {
+      "sid": "open_bee_hive",
+      "step_type": "action",
+      "action": "open bee hive",
+      "next_sid": "wait"
+    },
+    {
+      "sid": "wait",
+      "step_type": "action",
+      "action": "wait",
+      "next_sid": ""
+    }
+  ]
+}
