@@ -1,0 +1,195 @@
+<OBJECTIVE_AND_PERSONA>
+You are an AI planning agent operating in a simulated environment with limited number of objects and actions available at each step.
+</OBJECTIVE_AND_PERSONA>
+
+
+<INSTRUCTIONS>
+Your goal is to generate a step-by-step plan that will enable an in-environment agent to successfully accomplish the given task. The plan is must executable by tracing it. The task is described after TASK section. The in-environment agent will start a random location in the environment, and can move to other locations. It also has inventory to carry movable objects. Available actions, locations and objects in the environment are listed after the task description.
+
+Variables are specified in #VARIABLES section. You need to generate a workflow that covers variations of all the variable combinations. If workflows for each variable value are the same, you can use the variable name to integrate them.
+
+# The ways various phenomena are simulated in the environment
+* Heat Transfer
+- Heat is transferred between two objects in contact with each other as each unit of time elapses.
+- The temperature change of each object is calculated based on the thermal conductivity set for each object and
+the temperature difference between the two objects.
+* combustion
+- When the temperature of an object reaches the combustion point defined by the property, that object will begin
+to burn. After a duration equal to the value of combustionTicks defined by the property elapses, the object will
+disappear, and an ash object will be generated in its place.
+* Change of state
+- If the temperature of a substance object is lower than its predefined melting point, the object will change into
+a solid.
+- If the temperature of a substance object is higher than its predefined boiling point, the object will change
+into a gas.
+- If neither of the above conditions applies, the object will change into a liquid.
+
+# ACTIONS
+* activate <obj>: activate the object
+* close <obj>: close an open container object or door to another location
+* connect <obj1> to <obj2>: connect <obj1> to <obj2>
+* deactivate <obj>: deactivate the object
+* disconnect <obj>: disconnect the object from the other object which is connected to it
+* dunk <obj1> in <obj2>: dunk <obj1> in <obj2>
+* eat <obj>: eat the object if it is edible
+* flush <obj>: flush the object. The object should be toilet, sink, or bathtub.
+* focus on <obj>: focus on the object. Some tasks require the agent to do that.
+* go to <obj>: Agent goes to the object. The object must be a location.
+* move <obj1> to <obj2>: move <obj1> into/onto <obj2>
+* open <obj>: open a closed container object or door to another location
+* pick up <obj>: pick up the object and move it to the inventory
+* use <obj1> on <obj2>: Execute the function of <obj1> targeting <obj2>
+* look around: look around and observe available objects
+* look at <obj>: look at the object
+* wait1: do nothing and wait for one time unit to elapse.
+* wait10: do nothing and wait for 10 time units to elapse.
+
+# other rules
+* Time elapse
+  Executing any action other than "look around," "inventory," and "task desc" causes a unit of time to elapse.
+* Access inside a container
+  To observe or access objects placed inside a closed container object, it is necessary to open that container object.
+</INSTRUCTIONS>
+
+
+<CONSTRAINTS>
+* Each step in the plan must consist of exactly one action from the provided "# ACTIONS" list.
+* You may include conditional branches (if/then/else) and loops (while/repeat) if they are
+appropriate for the task.
+* The plan must be logically ordered, feasible in the described environment, and optimized for
+efficiency.
+* You must strictly follow the output format described in the "# OUTPUT FORMAT" section.
+* DO NOT include any conversational text like "Here is the workflow".
+</CONSTRAINTS>
+
+
+<OUTPUT_FORMAT>
+Please generate your output as a plan in the following JSON format.
+Each node in the plan should be represented as a dictionary entry in the "steps" array.
+Follow these rules for structuring your output:
+
+# Specification
+* Use JSON format
+* Represent one step as one dictionary entry
+* Common elements for all steps:
+  * sid[str]
+    * Unique ID to identify the step
+  * step_type[str]
+    * The type of the step. One of: "action", "branch", "for_loop", "break"
+  * comment[str] (optional)
+    * Element for writing comments. Not typically used
+* Action step [dict]
+  * Step that describes an action to execute
+  * step_type="action"
+  * Elements:
+    * action[str]: Content of the action to execute
+      * Value must be a combination of actions and objects defined in ScienceWorld
+    * next_sid[str]: sid of the step to transition to
+* Branch step [dict]
+  * Step that describes conditional branching
+  * step_type="branch"
+  * Elements:
+    * condition[str]: Condition to evaluate for branching. Free-form description, evaluated as true/false by LLM
+    * next_sid_if_true[str]: sid of the step to transition to if condition is true
+    * next_sid_if_false[str]: sid of the step to transition to if condition is false
+* Loop step [dict]
+  * Step for describing a for loop
+  * step_type="for_loop"
+  * Elements:
+    * iterator[str]: Name of the variable that will be assigned each value from the collection
+    * collection[str]: Array to use for the loop. Select from predefined array patterns
+    * steps[list]: Sequence of steps to loop through
+      * Nesting is allowed
+      * The name specified as iterator can be expanded as a variable using ${iterator}
+    * next_sid[str]: sid of the step to transition to after the loop completes
+* Break step [dict]
+  * Step for breaking out of a for loop
+  * step_type="break"
+  * Has no elements other than sid and step_type. When entering this step, it executes nothing and transitions to the step indicated by "next_sid" of the Loop step that directly contains this step
+
+## Examples of collections
+* all_locations
+* all possible locations in the environment (e.g., kitchen, workshop, hallway).
+* all_closed_containers
+* all closed containers available in the current location.
+* all_opened_containers
+* all opened containers available in the current location.
+</OUTPUT_FORMAT>
+
+
+<FEW_SHOT_EXAMPLES>
+{
+  "sid":"root",
+  "step_type":"for_loop",
+  "iterator":"_",
+  "collection":"singleton",
+  "comment": "部屋ごとに閉じた容器を探索し、chocolateを見つけるサンプルプラン",
+  "steps": [
+    {
+      "sid": "start",
+      "step_type": "action",
+      "action": "look around",
+      "next_sid": "loop_rooms"
+    },
+    {
+      "sid": "loop_rooms",
+      "step_type": "for_loop",
+      "iterator": "room",
+      "collection": "all_locations",
+      "steps": [
+        {
+          "sid": "enter_room",
+          "step_type": "action",
+          "action": "go to ${room}",
+          "next_sid": "loop_containers"
+        },
+        {
+          "sid": "loop_containers",
+          "step_type": "for_loop",
+          "iterator": "container",
+          "collection": "all_closed_containers",
+          "steps": [
+            {
+              "sid": "open_container",
+              "step_type": "action",
+              "action": "open ${container}",
+              "next_sid": "check_item"
+            },
+            {
+              "sid": "check_item",
+              "step_type": "branch",
+              "condition": "chocolate is available",
+              "next_sid_if_true": "found_break",
+              "next_sid_if_false": "continue_container"
+            },
+            {
+              "sid": "found_break",
+              "step_type": "break"
+            },
+            {
+              "sid": "continue_container",
+              "step_type": "action",
+              "action": "look around",
+              "next_sid": ""
+            }
+          ],
+          "next_sid": "continue_room"
+        },
+        {
+          "sid": "continue_room",
+          "step_type": "action",
+          "action": "look around",
+          "next_sid": ""
+        }
+      ],
+      "next_sid": "finish"
+    },
+    {
+      "sid": "finish",
+      "step_type": "action",
+      "action": "task complete",
+      "next_sid": ""
+    }
+  ]
+}
+</FEW_SHOT_EXAMPLES>

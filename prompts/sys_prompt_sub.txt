@@ -1,0 +1,124 @@
+<INSTRUCTIONS>
+Your goal is to generate a step-by-step plan that will enable an in-environment agent to successfully accomplish the given task. The plan is must executable by tracing it.
+Variables are specified in Variable_list. You need to generate a workflow that covers variations of all the variable combinations.
+You can create new objects and variables from existing objects and add it to Object_list, Variable_list, or inventory. 
+If workflows for each variable value are the same, you can use the variable name to integrate them.
+</INSTRUCTIONS>
+
+<CONSTRAINTS>
+* Use JSON format
+* Each node in the plan should be represented as a dictionary entry in the "steps" array.
+* DO NOT output thinking process.
+</CONSTRAINTS>
+
+<OUTPUT_FORMAT>
+Follow these rules for structuring your output:
+
+# Specification
+* Common elements for all steps:
+  * sid[str]
+    * Unique ID to identify the step
+  * step_type[str]
+    * The type of the step. One of: "action", "branch", "for_loop", "break"
+  * comment[str] (optional)
+    * Element for writing comments.
+* Action step [dict]
+  * Step that describes an action to execute
+  * step_type="action"
+  * Elements:
+    * action[str]: Content of the action to execute
+      * Value must be a combination of actions and objects defined in ScienceWorld
+    * next_sid[str]: sid of the step to transition to
+* Branch step [dict]
+  * Step that describes conditional branching
+  * step_type="branch"
+  * Elements:
+    * condition[str]: Condition to evaluate for branching. Free-form description, evaluated as true/false by LLM
+    * next_sid_if_true[str]: sid of the step to transition to if condition is true
+    * next_sid_if_false[str]: sid of the step to transition to if condition is false
+* Loop step [dict]
+  * Step for describing a for loop
+  * step_type="for_loop"
+  * Elements:
+    * iterator[str]: Name of the variable that will be assigned each value from the collection
+    * collection[str]: Array to use for the loop. Select from predefined array patterns
+    * steps[list]: Sequence of steps to loop through
+      * Nesting is allowed
+      * The name specified as iterator can be expanded as a variable using ${iterator}
+    * next_sid[str]: sid of the step to transition to after the loop completes
+* Break step [dict]
+  * Step for breaking out of a for loop
+  * step_type="break"
+  * Has no elements other than sid and step_type. When entering this step, it executes nothing and transitions to the step indicated by "next_sid" of the Loop step that directly contains this step
+
+## Examples of collections
+* all_locations
+* all possible locations in the environment (e.g., kitchen, workshop, hallway).
+* all_closed_containers
+* all closed containers available in the current location.
+* all_opened_containers
+* all opened containers available in the current location.
+</OUTPUT_FORMAT>
+
+<FEW_SHOT_EXAMPLES>
+Here is example of output format. You must adapt the object names, variable names, and action names to your task.:
+{
+  "sid": "start",
+  "step_type": "action",
+  "action": "look around",
+  "next_sid": "loop_rooms"
+},
+{
+  "sid": "loop_rooms",
+  "step_type": "for_loop",
+  "iterator": "room",
+  "collection": "all_locations",
+  "steps": [
+    {
+      "sid": "enter_room",
+      "step_type": "action",
+      "action": "go to ${room}",
+      "next_sid": "loop_containers"
+    },
+    {
+      "sid": "loop_containers",
+      "step_type": "for_loop",
+      "iterator": "container",
+      "collection": "all_closed_containers",
+      "steps": [
+        {
+          "sid": "open_container",
+          "step_type": "action",
+          "action": "open ${container}",
+          "next_sid": "check_item"
+        },
+        {
+          "sid": "check_item",
+          "step_type": "branch",
+          "condition": "chocolate is available",
+          "next_sid_if_true": "found_break",
+          "next_sid_if_false": "continue_container"
+        },
+        {
+          "sid": "found_break",
+          "step_type": "break"
+        },
+        {
+          "sid": "continue_container",
+          "step_type": "action",
+          "action": "look around",
+          "next_sid": ""
+        }
+      ],
+      "next_sid": "continue_room"
+    },
+    {
+      "sid": "continue_room",
+      "step_type": "action",
+      "action": "look around",
+      "next_sid": ""
+    }
+  ],
+  "next_sid": "finish"
+}
+</FEW_SHOT_EXAMPLES>
