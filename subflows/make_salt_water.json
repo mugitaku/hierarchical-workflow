@@ -6,7 +6,7 @@
       "sid": "move_salt_to_container",
       "step_type": "action",
       "action": "move salt to ${container} of water",
-      "next_sid": "loop_rooms"
+      "next_sid": "mix_container"
     },
     {
       "sid": "mix_container",
