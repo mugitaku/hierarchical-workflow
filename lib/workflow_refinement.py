@@ -12,15 +12,17 @@ def refine_workflow_content(steps, user_prompt_origin, format_content, args, rou
     print("\n=== Phase 3: 最終ワークフローの最適化 (Step 1: Content) ===")
     
     workflow_json_str = json.dumps(steps, indent=2, ensure_ascii=False)
-    known_actions = load_and_format_actions(args.actions_file, types=['primitive1', 'primitive2', "special"])
+    known_actions = load_and_format_actions(args.actions_file, types=['primitive1', 'primitive2', "milestone"])
 
     refine_prompt_1 = f"""
 <INSTRUCTIONS>
 Refine the workflow showed in WORKFLOW_TO_REFINE section.
-The workflow is to complete your task showed in OVERALL_TASK section.
+The workflow is to complete the task showed in OVERALL_TASK section.
 
 Follow these instructions to refine the workflow content:
-* Insert missing steps for the workflow to be successfully executed
+* If task steps are specified in OVERALL_TASK section, you MUST follow the order
+* If the milestone action is specified in task steps, you MUST use the action
+* Insert missing steps to be successfully executed
 * If there are multiple ways to complete your task,
     include them to the workflow using conditional branches,
     because some objects in the environment can be unavailable and your task must be completed.
@@ -28,11 +30,11 @@ Follow these instructions to refine the workflow content:
     {{"sid": "availability_machine_1", "step_type": "branch", "condition": "machine 1 is available", "next_sid_if_true": "machine_1", "next_sid_if_false": "machine_2"}},
     {{"sid": "machine_1", "step_type": "action", "action": "use machine 1", "next_sid": "pick_up_product"}},
     {{"sid": "machine_2", "step_type": "action", "action": "use machine 2", "next_sid": "pick_up_product"}}
-* Replace ambiguous action steps with more specific ones
 * Adapt the object names and variable names in the steps to your environment written in CONTEXT section
 * Check the agent's location and use "go to <room>" action step properly
-* Only the following actions are allowed in the workflow:
-    {known_actions}
+* Only the following actions are allowed in the workflow. 
+  If the milestone action is specified in task steps, you MUST use the action.
+  {known_actions}
 </INSTRUCTIONS>
 
 {user_prompt_origin}
