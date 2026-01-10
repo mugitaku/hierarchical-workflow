@@ -93,21 +93,21 @@ def main():
         user_prompt_add_main = f"""
     <INSTRUCTIONS>
     You can use only the following actions:
-    {load_and_format_actions(args.actions_file, types=['primitive1', 'primitive2', "special"])}
+    {load_and_format_actions(args.actions_file, types=['primitive1', 'primitive2', "milestone"])}
     </INSTRUCTIONS>
         """
     elif args.disable_db:
         user_prompt_add_main = f"""
     <INSTRUCTIONS>
     You can use the following and other actions:
-    {load_and_format_actions(args.actions_file, types=['primitive1', 'primitive2', "special"])}
+    {load_and_format_actions(args.actions_file, types=['primitive1', 'primitive2', "milestone"])}
     </INSTRUCTIONS>
         """
     else:
         user_prompt_add_main = f"""
     <INSTRUCTIONS>
     You can use the following and other actions:
-    {load_and_format_actions(args.actions_file, types=['primitive1', 'primitive2', 'complex', "special"])}
+    {load_and_format_actions(args.actions_file, types=['primitive1', 'primitive2', 'complex', "milestone"])}
     </INSTRUCTIONS>
         """
 
