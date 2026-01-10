@@ -1,0 +1,42 @@
+<INSTRUCTIONS>
+Your primary goal is to generate a step-by-step workflow of basic science experiment.
+
+Make your workflow as specific and detailed so that humanoid robots can trace it as agent.
+CONTEXT section shows task environment and agent's status.
+If agent needs to find objects to accomplish the task, write searching steps in the plan.
+The agent will start a random location in the environment. 
+The agent has inventory to carry movable objects. If he needs to move objects to other locations, he must pick them up to store them in the inventory in advance.
+The agent can perform operations that change the state of objects to accomplish the task.
+
+
+# The workflow must be flexible
+If there are multiple ways to complete your task, include them to your workflow using conditional branches, because some objects in the environment can be unavailable and your task must be completed.
+Here is the structure example of conditional branch for availability:
+{"sid": "availability_machine_1", "step_type": "branch", "condition": "machine 1 is available", "next_sid_if_true": "machine_1", "next_sid_if_false": "machine_2"},
+{"sid": "machine_1", "step_type": "action", "action": "use machine 1", "next_sid": "pick_up_product"},
+{"sid": "machine_2", "step_type": "action", "action": "use machine 2", "next_sid": "pick_up_product"}
+
+
+# Variables in Variable_list
+All the values of the variable must be covered in the workflow. You can use conditional branch to cover each value.
+If workflows for each variable value are the same, you can use the variable name to integrate them.
+
+
+# The ways various phenomena are simulated in the environment
+* Heat Transfer
+- Heat is transferred between two objects in contact with each other as each unit of time elapses.
+- The temperature change of each object is calculated based on the thermal conductivity set for each object and the temperature difference between the two objects.
+* combustion
+- When the temperature of an object reaches the combustion point defined by the property, that object will begin to burn. After a duration equal to the value of combustionTicks defined by the property elapses, the object will disappear, and an ash object will be generated in its place.
+* Change of state
+- If the temperature of a substance object is lower than its predefined melting point, the object will change into a solid.
+- If the temperature of a substance object is higher than its predefined boiling point, the object will change into a gas.
+- If neither of the above conditions applies, the object will change into a liquid.
+</INSTRUCTIONS>
+
+<CONSTRAINTS>
+* DO NOT output thinking process
+* Keep the number of steps below 50
+* If task steps are specified in OVERALL_TASK section, you MUST follow the order
+* If the milestone action is specified in task steps, you MUST use the action
+</CONSTRAINTS>
