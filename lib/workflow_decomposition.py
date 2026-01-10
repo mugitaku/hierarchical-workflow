@@ -11,7 +11,7 @@ def is_decomposable(action_str, action_definitions):
     """
     アクション文字列を定義リストと照合し、分解可能かどうかを判断する。
     最も長くマッチしたアクション定義を探し、そのtypeが'complex'か、または定義が見つからなければTrueを返す。
-    typeが'primitive1', 'primitive2', 'special'であればFalseを返す。
+    typeが'primitive1', 'primitive2', 'milestone'であればFalseを返す。
     """
     if not action_str: return False # Empty action is not decomposable
     
@@ -24,7 +24,7 @@ def is_decomposable(action_str, action_definitions):
     
     if best_match_def:
         action_type = best_match_def.get('type')
-        # 'complex' is decomposable. 'primitive1', 'primitive2', and 'special' are not.
+        # 'complex' is decomposable. 'primitive1', 'primitive2', and 'milestone' are not.
         return action_type == 'complex'
 
     # No definition found, so we assume it's a complex action that needs decomposition.
