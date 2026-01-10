@@ -54,12 +54,12 @@ def sub_workflow_recursive(user_prompt_origin, steps_list, action_definitions, s
                     action_constraints = "You can use only the following actions:" + "\n" +load_and_format_actions(args.actions_file, types=['primitive1', 'primitive2', 'complex'])
                 
                 user_prompt_add_sub =f"""
-<SPECIFIC_TASK>
+<TASK>
 Generate workflow from "{action_content}" action if possible,
  but DO NOT use "{action_content}" itself in the workflow.
 The object names and action names in the workflow must be adapted to your task.
 {action_constraints}
-</SPECIFIC_TASK>
+</TASK>
                 """
                 
                 sid_to_replace = step.get("sid")
