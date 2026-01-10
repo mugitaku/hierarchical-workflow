@@ -3,139 +3,133 @@
     "action": "activate",
     "example": "activate <obj>",
     "description": "activate the object",
-    "type": "primitive"
+    "type": "primitive2"
   },
   {
     "action": "close",
     "example": "close <obj>",
     "description": "close an open container object or door to another location",
-    "type": "primitive"
+    "type": "primitive1"
   },
   {
     "action": "connect",
     "example": "connect <obj1> to <obj2>",
     "description": "connect <obj1> to <obj2>. Connections must specify specific points of contact on polarized electrical components (e.g. anode, cathode, terminal 1)",
-    "type": "primitive"
+    "type": "primitive2"
   },
   {
     "action": "deactivate",
     "example": "deactivate <obj>",
     "description": "deactivate the object",
-    "type": "primitive"
+    "type": "primitive2"
   },
   {
     "action": "disconnect",
     "example": "disconnect <obj>",
     "description": "disconnect the object from the other object which is connected to it",
-    "type": "primitive"
+    "type": "primitive2"
   },
   {
     "action": "dunk",
     "example": "dunk <obj1> in <obj2>",
     "description": "dunk <obj1> in <obj2>",
-    "type": "primitive"
+    "type": "primitive2"
   },
   {
     "action": "eat",
     "example": "eat <obj>",
     "description": "eat the object if it is edible",
-    "type": "primitive"
+    "type": "primitive2"
   },
   {
     "action": "examine",
     "example": "examine <obj>",
-    "description": "examine the state of the object",
-    "type": "primitive"
+    "description": "see the state of the object",
+    "type": "primitive2"
   },
   {
     "action": "flush",
     "example": "flush <obj>",
     "description": "flush the object. The object should be toilet, sink, or bathtub.",
-    "type": "primitive"
+    "type": "primitive2"
   },
   {
     "action": "focus on",
     "example": "focus on <obj>",
-    "description": "focus on the object. This action is available only in the case task directs.",
-    "type": "primitive"
+    "description": "focus on the object. This is the milestone action. This is available only in the case the task directs and the object is visible.",
+    "type": "milestone"
   },
   {
     "action": "go to",
-    "example": "go to <obj>",
-    "description": "Agent goes to the object. The object must be a location.",
-    "type": "primitive"
+    "example": "go to <location>",
+    "description": "Agent goes to another location.",
+    "type": "primitive1"
   },
   {
     "action": "mix",
-    "example": "move <obj>",
+    "example": "mix <obj>",
     "description": "mix the content of the object.",
-    "type": "primitive"
+    "type": "primitive2"
   },
   {
     "action": "move",
     "example": "move <obj1> to <obj2>",
     "description": "move <obj1> into/onto <obj2>.",
-    "type": "primitive"
+    "type": "primitive2"
   },
   {
     "action": "open",
     "example": "open <obj>",
     "description": "open a closed container object or door to another location.",
-    "type": "primitive"
+    "type": "primitive1"
   },
   {
     "action": "pick up",
     "example": "pick up <obj>",
     "description": "pick up the object and move it to the inventory.",
-    "type": "primitive"
+    "type": "primitive1"
   },
   {
     "action": "pour",
     "example": "pour <obj1> into <obj2>",
     "description": "pour <obj1> into <obj2>.",
-    "type": "primitive"
+    "type": "primitive2"
   },
   {
     "action": "put down",
     "example": "put down <obj>",
     "description": "move the object from the inventory to the location.",
-    "type": "primitive"
+    "type": "primitive1"
   },
   {
     "action": "use",
     "example": "use <obj1> on <obj2>",
     "description": "Execute the function of <obj1> targeting <obj2>.",
-    "type": "primitive"
-  },
-  {
-    "action": "look around",
-    "example": "look around",
-    "description": "look around and observe available objects.",
-    "type": "primitive"
+    "type": "primitive2"
   },
   {
     "action": "look at",
     "example": "look at <obj>",
     "description": "look at the object",
-    "type": "primitive"
+    "type": "primitive2"
   },
   {
     "action": "wait1",
     "example": "wait1",
     "description": "do nothing and wait for one time unit to elapse",
-    "type": "primitive"
+    "type": "primitive1"
   },
   {
     "action": "wait10",
     "example": "wait10",
     "description": "do nothing and wait for 10 time units to elapse",
-    "type": "primitive"
+    "type": "primitive1"
   },
   {
     "action": "task complete",
     "example": "task complete",
-    "description": "Declare task completion.",
-    "type": "special"
+    "description": "Declare task completion. The step is the destination of this workflow.",
+    "type": "milestone"
   },
   {
     "action": "cool",
