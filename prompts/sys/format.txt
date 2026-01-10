@@ -1,0 +1,51 @@
+<OUTPUT_FORMAT>
+Output format of workflow:
+Use JSON format.
+Each node in the plan should be represented as a dictionary entry in the "steps" array.
+
+# Specification
+* Common elements for all steps:
+  * sid[str]
+    * Unique ID to identify the step
+  * step_type[str]
+    * The type of the step. One of: "action", "branch", "for_loop", "break"
+  * comment[str] (optional)
+    * Element for writing comments
+* Action step [dict]
+  * Step that describes an action to execute
+  * step_type="action"
+  * Elements:
+    * action[str]: Content of the action to execute
+      * Value must be a combination of actions and objects defined in ScienceWorld
+    * next_sid[str]: sid of the step to transition to
+* Branch step [dict]
+  * Step that describes conditional branching
+  * step_type="branch"
+  * Elements:
+    * condition[str]: Condition to evaluate for branching. Free-form description, evaluated as true/false by LLM
+    * next_sid_if_true[str]: sid of the step to transition to if condition is true
+    * next_sid_if_false[str]: sid of the step to transition to if condition is false
+* Loop step [dict]
+  * Step for describing a for loop
+  * step_type="for_loop"
+  * Elements:
+    * iterator[str]: Name of the variable that will be assigned each value from the collection
+    * collection[str]: Array to use for the loop. Select from predefined array patterns
+    * steps[list]: Sequence of steps to loop through
+      * Nesting is allowed
+      * The name specified as iterator can be expanded as a variable using ${iterator}
+    * next_sid[str]: sid of the step to transition to after the loop completes
+* Break step [dict]
+  * Step for breaking out of a for loop
+  * step_type="break"
+  * Has no elements other than sid and step_type. When entering this step, it executes nothing and transitions to the step indicated by "next_sid" of the Loop step that directly contains this step
+
+## Allowed collections
+* singleton
+* all_locations
+  * all possible locations in the environment (e.g., kitchen, workshop, hallway).
+* all_closed_containers
+  * all closed containers available in the current location.
+* all_opened_containers
+  * all opened containers available in the current location.
+</OUTPUT_FORMAT>

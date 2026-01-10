@@ -1,0 +1,77 @@
+<FEW_SHOT_EXAMPLES>
+Here is example of output format. You must adapt the object names, variable names, and action names to your task.:
+{
+  "sid":"root",
+  "step_type":"for_loop",
+  "iterator":"_",
+  "collection":"singleton",
+  "comment": "部屋ごとに閉じた容器を探索し、chocolateを見つけるサンプルプラン",
+  "steps": [
+    {
+      "sid": "start",
+      "step_type": "action",
+      "action": "look around",
+      "next_sid": "loop_rooms"
+    },
+    {
+      "sid": "loop_rooms",
+      "step_type": "for_loop",
+      "iterator": "room",
+      "collection": "all_locations",
+      "steps": [
+        {
+          "sid": "enter_room",
+          "step_type": "action",
+          "action": "go to ${room}",
+          "next_sid": "loop_containers"
+        },
+        {
+          "sid": "loop_containers",
+          "step_type": "for_loop",
+          "iterator": "container",
+          "collection": "all_closed_containers",
+          "steps": [
+            {
+              "sid": "open_container",
+              "step_type": "action",
+              "action": "open ${container}",
+              "next_sid": "check_item"
+            },
+            {
+              "sid": "check_item",
+              "step_type": "branch",
+              "condition": "chocolate is available",
+              "next_sid_if_true": "found_break",
+              "next_sid_if_false": "continue_container"
+            },
+            {
+              "sid": "found_break",
+              "step_type": "break"
+            },
+            {
+              "sid": "continue_container",
+              "step_type": "action",
+              "action": "look around",
+              "next_sid": ""
+            }
+          ],
+          "next_sid": "continue_room"
+        },
+        {
+          "sid": "continue_room",
+          "step_type": "action",
+          "action": "look around",
+          "next_sid": ""
+        }
+      ],
+      "next_sid": "finish"
+    },
+    {
+      "sid": "finish",
+      "step_type": "action",
+      "action": "task complete",
+      "next_sid": ""
+    }
+  ]
+}
+</FEW_SHOT_EXAMPLES>
