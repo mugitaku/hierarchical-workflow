@@ -5,7 +5,8 @@ import json
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Workflow Generator & Refiner")
     parser.add_argument("--model", type=str, help="litellm.yaml内の model_name を指定")
-    parser.add_argument("--user_file", type=str, help="タスクの内容が書かれたテキストファイルのパス")
+    parser.add_argument("--user_env_file", type=str, help="エージェントの環境が書かれたテキストファイル")
+    parser.add_argument("--user_task_file", type=str, help="エージェントのタスクが書かれたテキストファイル")
     parser.add_argument("--sys_main_file", type=str, default="prompts/sys/main.txt", help="System Prompt for main workflow")
     parser.add_argument("--sys_sub_file", type=str, default="prompts/sys/sub.txt", help="System Prompt for sub workflow")
     parser.add_argument("--format_file", type=str, default="prompts/sys/format.txt", help="System Prompt for format")
