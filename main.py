@@ -26,14 +26,15 @@ def main():
         sys_prompt_main = load_file_content(args.sys_main_file) + "\n" + format_content
     else:
         sys_prompt_main = load_file_content(args.sys_main_file) + "\n" + format_content + "\n" + example_content
-    user_prompt_origin = load_file_content(args.user_file)
+    user_prompt_env = f"""<CONTEXT>{load_file_content(args.user_env_file)}</CONTEXT>"""
+    user_prompt_origin = f"""<CONTEXT>{load_file_content(args.user_env_file)}</CONTEXT><TASK>{load_file_content(args.user_task_file)}</TASK>"""
 
     # --- Router & DB Initialization ---
     router = initialize_router()
     local_embed_model, collection = initialize_db(args.disable_db)
 
     # --- Output Setup ---
-    user_file_basename = os.path.splitext(os.path.basename(args.user_file))[0] if args.user_file else "default_task"
+    user_file_basename = os.path.splitext(os.path.basename(args.user_task_file))[0] if args.user_task_file else "default_task"
     output_dir = os.path.join("output", user_file_basename)
     if not os.path.exists(output_dir): os.makedirs(output_dir, exist_ok=True)
     sanitized_model_name = args.model.split(':')[0].split('/')[-1]
@@ -140,7 +141,7 @@ def main():
         else:
             sys_prompt_sub = load_file_content(args.sys_sub_file) + "\n" + format_content + "\n" + example_content
         
-        pre_refined_final_steps = sub_workflow_recursive(user_prompt_origin, copy.deepcopy(initial_steps), action_definitions, sys_prompt_sub, args, router, local_embed_model, collection)
+        pre_refined_final_steps = sub_workflow_recursive(user_prompt_env, copy.deepcopy(initial_steps), action_definitions, sys_prompt_sub, args, router, local_embed_model, collection)
         final_steps = pre_refined_final_steps
 
     pre_refined_workflow = {
