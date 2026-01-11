@@ -1,0 +1,109 @@
+Agent:
+  inventory: []
+
+
+Object_list:
+  - id: "sink"
+    location: "kitchen"
+    status: "deactivated"
+
+  - id: "stove"
+    location: "kitchen"
+    status: "deactivated"
+
+  - id: "oven"
+    location: "kitchen"
+    status: "deactivated"
+
+  - id: "cupboard"
+    location: "kitchen"
+    status: "closed"
+    contains:
+      - id: "marshmallow"
+        status: "solid"
+        location: "kitchen"
+
+      - id: "metal pot"
+        location: "kitchen"
+
+  - id: "freezer"
+    location: "kitchen"
+    status: "closed"
+    contains:
+      - id: "ceramic cup"
+        location: "kitchen"
+        contains:
+          - id: "ice cream"
+            status: "solid"
+            location: "kitchen"
+
+  - id: "fridge"
+    location: "kitchen"
+    status: "closed"
+    contains:
+      - id: "wood cup"
+        location: "kitchen"
+        contains:
+          - id: "orange juice"
+            location: "kitchen"
+            status: "liquid"
+
+      - id: "glass cup"
+        location: "kitchen"
+        contains:
+          - id: "apple juice"
+            location: "kitchen"
+            status: "liquid"
+
+      - id: "chocolate"
+        location: "kitchen"
+        status: "solid"
+
+  - id: "soap"
+    location: "kitchen"
+
+  - id: "jug"
+    location: "workshop"
+    contains:
+      - id: "Lead"
+        status: "solid"
+        location: "workshop"
+
+  - id: "metal pot"
+    location: "workshop"
+    contains:
+      - id: "Tin"
+        status: "solid"
+        location: "workshop"
+
+  - id: "glass cup"
+    location: "workshop"
+    contains:
+      - id: "Mercury"
+        status: "solid"
+        location: "workshop"
+
+  - id: "glass cup"
+    location: "workshop"
+    contains:
+      - id: "Gallium"
+        status: "solid"
+        location: "workshop"
+
+  - id: "ceramic cup"
+    location: "workshop"
+    contains:
+      - id:"Caesium"
+        status: "solid"
+        location: "workshop"
+
+  - id: "rubber"
+    location: "workshop"
+
+  - id: "blast furnace"
+    location: "foundry"
+    status: ["deactivated", "closed"]
+
+  - id: "sink"
+    location: "foundry"
+    status: "deactivated"
