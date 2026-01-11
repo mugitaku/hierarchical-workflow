@@ -24,9 +24,9 @@ def search_subflows(collection, local_embed_model, subtasks, disable_db):
             results = collection.query(query_embeddings=[query_vector], n_results=1)
 
             if results['distances'] and len(results['distances'][0]) > 0:
-                dist = int(results['distances'][0][0])
+                dist = results['distances'][0][0]
                 found_task = results['metadatas'][0][0]['task']
-                print(f"distance {dist}: ", subtask, "VS", found_task)
+                print(f"distance {int(dist)}: ", subtask, "VS", found_task)
                 found_doc = results['documents'][0][0]
                 if dist <= 25:
                     if found_task not in found_subflows:
