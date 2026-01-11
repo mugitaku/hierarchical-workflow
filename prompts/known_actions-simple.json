@@ -30,12 +30,6 @@
     "type": "primitive2"
   },
   {
-    "action": "examine",
-    "example": "examine <obj>",
-    "description": "see the state of the object",
-    "type": "primitive2"
-  },
-  {
     "action": "flush",
     "example": "flush <obj>",
     "description": "flush the object. The object should be toilet, sink, or bathtub.",
