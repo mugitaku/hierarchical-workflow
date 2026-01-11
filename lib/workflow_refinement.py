@@ -1,7 +1,30 @@
 import json
 from lib.llm_api import completion_with_backoff
 from lib.utils import extract_json, normalize_workflow_steps, find_duplicate_sids, find_broken_links, verify_step_types, verify_collection_values
-from lib.config_loader import load_and_format_actions
+from lib.config_loader import load_and_format_actions, get_action_definitions
+
+def verify_actions(steps, allowed_actions):
+    """
+    Verifies that all 'action' steps in the workflow use actions from the allowed list.
+    """
+    invalid_actions = []
+    allowed_action_names = {action['action'] for action in allowed_actions}
+
+    def check_steps_recursive(step_list):
+        if not isinstance(step_list, list):
+            return
+        for step in step_list:
+            if step.get('step_type') == 'action':
+                action_name = step.get('action')
+                if action_name and not any(action_name.startswith(allowed) for allowed in allowed_action_names):
+                    invalid_actions.append(step)
+            
+            if step.get('step_type') == 'for_loop' and 'steps' in step:
+                check_steps_recursive(step['steps'])
+
+    check_steps_recursive(steps)
+    return invalid_actions
+
 
 def refine_workflow_content(steps, user_prompt_origin, format_content, args, router):
     """
@@ -12,7 +35,7 @@ def refine_workflow_content(steps, user_prompt_origin, format_content, args, rou
     print("\n=== Phase 3: Content Refinement (内容の改善) ===")
     
     workflow_json_str = json.dumps(steps, indent=2, ensure_ascii=False)
-    action_list_refine_content = load_and_format_actions(args.actions_file, types=['primitive1', 'primitive2', "milestone"])
+    action_list_refine_content = load_and_format_actions(args.actions_file, True, ['primitive1', 'primitive2', "milestone"])
 
     refine_prompt_1 = f"""
 <INSTRUCTIONS>
@@ -31,8 +54,7 @@ Follow these instructions:
     {{"sid": "machine_2", "step_type": "action", "action": "use machine 2", "next_sid": "pick_up_product"}}
 * Adapt the object names and variable names in the steps to your environment written in CONTEXT section
 * Check the agent's location and use "go to <room>" action step properly
-* Only the following actions are allowed in the workflow. 
-  {action_list_refine_content}
+* {action_list_refine_content}
 * If a action step contains multiple actions, split it into multiple steps
 * If the milestone action is specified in task steps, you MUST use the action
 </INSTRUCTIONS>
@@ -95,8 +117,11 @@ def refine_workflow_format(steps, user_prompt_origin, user_prompt_add, format_co
     broken_links = find_broken_links(steps)
     invalid_step_types = verify_step_types(steps)
     invalid_collections = verify_collection_values(steps)
+    
+    action_definitions = get_action_definitions(args.actions_file)
+    invalid_actions = verify_actions(steps, action_definitions)
 
-    has_errors = duplicate_sids or broken_links or invalid_step_types or invalid_collections
+    has_errors = duplicate_sids or broken_links or invalid_step_types or invalid_collections or invalid_actions
     
     if not has_errors:
         print("  [Info] ワークフローのフォーマットは正常です。Step 2のリファインをスキップします。")
@@ -123,6 +148,12 @@ def refine_workflow_format(steps, user_prompt_origin, user_prompt_add, format_co
         error_instructions.append(
             f"* The following for_loop steps have invalid `collection` values. You MUST fix them (allowed values for `collection` are: singleton, all_locations, all_closed_containers, all_opened_containers):\n" +
             "\n".join([f"  - sid: {s['sid']}, invalid_collection: '{s['collection']}'" for s in invalid_collections])
+        )
+
+    if invalid_actions:
+        error_instructions.append(
+            f"* The following steps have invalid actions. You MUST fix them to use actions from the allowed list:\n" +
+            "\n".join([f"  - sid: {s['sid']}, invalid_action: '{s['action']}'" for s in invalid_actions])
         )
 
     error_prompt_section = "\n".join(error_instructions)
