@@ -1,0 +1,33 @@
+Agent:
+  inventory: []
+
+
+Object_list:
+  - id: "jug"
+    location: "greenhouse"
+    status: "empty"
+
+  - id: "sink"
+    location: "greenhouse"
+    status: "deactivated"
+
+  - id: "flower pot"
+    location: "greenhouse"
+    contains:
+      - id: "soil"
+        location: "greenhouse"
+
+  - id: "soil"
+    location: "greenhouse"
+
+  - id: "seed jar"
+    location: "kitchen"
+    contains:
+      - id: "apple seed"
+        location: "kitchen"
+
+  - id: "the ground"
+    location: "outside"
+
+  - id: "shovel"
+    location: "outside"

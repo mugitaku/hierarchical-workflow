@@ -1,0 +1,40 @@
+Agent:
+  inventory: []
+
+
+Object_list:
+  - id: "wood cup"
+    location: "art studio"
+    contains:
+      - id: "yellow paint"
+        location: "art studio"
+
+  - id: "wood cup"
+    location: "art studio"
+    contains:
+      - id: "blue paint"
+        location: "art studio"
+
+  - id: "wood cup"
+    location: "art studio"
+    contains:
+      - id: "red paint"
+        location: "art studio"
+
+  - id: "tin cup"
+    location: "art studio"
+    contains:
+      - id: "yellow paint"
+        location: "art studio"
+
+  - id: "tin cup"
+    location: "art studio"
+    contains:
+      - id: "blue paint"
+        location: "art studio"
+
+  - id: "tin cup"
+    location: "art studio"
+    contains:
+      - id: "red paint"
+        location: "art studio"

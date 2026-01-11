@@ -1,0 +1,23 @@
+Agent:
+  inventory: []
+
+
+Object_list:
+  - id: "wood block"
+    location: "workshop"
+
+  - id: "steel block"
+    location: "workshop"
+
+  - id: "brick"
+    location: "workshop"
+
+  - id: "stopwatch"
+    location: "workshop"
+    status: "deactivated"
+
+  - id: "inclined plane with a paper surface"
+    location: "workshop"
+
+  - id: "inclined plane with a cotton cloth surface"
+    location: "workshop"
