@@ -1,7 +1,5 @@
 import uuid
 import copy
-import uuid
-import copy
 from lib.llm_api import completion_with_backoff
 from lib.utils import extract_json, normalize_workflow_steps, find_broken_links, get_all_sids
 from lib.config_loader import load_file_content, load_and_format_actions
@@ -47,18 +45,18 @@ def sub_workflow_recursive(user_prompt_origin, steps_list, action_definitions, s
             # 定義データ(辞書リスト)を渡す
             if is_decomposable(action_content, action_definitions):
                 if current_depth >= args.max_depth - 1:
-                    action_constraints = "You can use only the following actions:" + "\n" +load_and_format_actions(args.actions_file, types=['primitive1', 'primitive2'])
+                    action_list_sub = "You can use only the following actions:" + "\n" +load_and_format_actions(args.actions_file, types=['primitive1', 'primitive2'])
                 elif args.disable_db:
-                    action_constraints = "You can use the following and other actions:" + "\n" +load_and_format_actions(args.actions_file, types=['primitive1', 'primitive2'])
+                    action_list_sub = "You can use the following and other actions:" + "\n" +load_and_format_actions(args.actions_file, types=['primitive1', 'primitive2'])
                 else:
-                    action_constraints = "You can use only the following actions:" + "\n" +load_and_format_actions(args.actions_file, types=['primitive1', 'primitive2', 'complex'])
+                    action_list_sub = "You can use only the following actions:" + "\n" +load_and_format_actions(args.actions_file, types=['primitive1', 'primitive2', 'complex'])
                 
                 user_prompt_add_sub =f"""
 <TASK>
 Generate workflow from "{action_content}" action if possible,
  but DO NOT use "{action_content}" itself in the workflow.
 The object names and action names in the workflow must be adapted to your task.
-{action_constraints}
+{action_list_sub}
 </TASK>
                 """
                 
@@ -66,7 +64,7 @@ The object names and action names in the workflow must be adapted to your task.
                 next_sid_to_replace = step.get("next_sid")
 
                 # 1. Generate raw sub-workflow without stitching
-                sub_workflow_data = generate_workflow(sys_prompt_sub, user_prompt_origin, user_prompt_add_sub, args, router, local_embed_model, collection)              
+                sub_workflow_data = generate_workflow(sys_prompt_sub, user_prompt_origin, user_prompt_add_sub, None, args, router, local_embed_model, collection)              
                 
                 sub_steps = normalize_workflow_steps(sub_workflow_data)
 
