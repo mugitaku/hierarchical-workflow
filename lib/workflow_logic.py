@@ -11,10 +11,13 @@ def generate_workflow(sys_prompt, user_prompt_origin, user_prompt_add, format_co
     reference_info = ""
     # primitive1 is routine action, so it is not used in subtask decomposition.
     if args.disable_db:
-        action_list_main = load_and_format_actions(args.actions_file, types=['primitive2'])
+        limited=True
+        types=['primitive2']
     else:
-        action_list_main = load_and_format_actions(args.actions_file, types=['primitive2', 'complex'])
-    
+        limited=True
+        types=['primitive2', 'complex']
+
+    action_list_main = load_and_format_actions(args.actions_file, limited, types)
     decomp_prompt = f"""
     <INSTRUCTIONS>
     List major subtasks to complete the following task: "{user_prompt_origin}". 
@@ -27,8 +30,7 @@ def generate_workflow(sys_prompt, user_prompt_origin, user_prompt_add, format_co
     * DO NOT use numbering or newlines.
     * DO NOT output thinking process.
     * DO NOT output duplicate subtasks.
-    * DO NOT use any actions that are not listed below:
-    {action_list_main}
+    * {action_list_main}
     </CONSTRAINTS>
     <OUTPUT_FORMAT>
     subtask1, subtask2, ...
