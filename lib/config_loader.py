@@ -26,7 +26,7 @@ def load_file_content(filepath):
     with open(filepath, "r", encoding="utf-8") as f:
         return f.read().strip()
 
-def load_and_format_actions(filepath, types=None):
+def load_and_format_actions(filepath, action_limited=False, action_types=None):
     if not os.path.exists(filepath):
         print(f"警告: アクションリストファイルが見つかりません: {filepath}")
         return ""
@@ -37,7 +37,9 @@ def load_and_format_actions(filepath, types=None):
         if types:
             actions_data = [item for item in actions_data if item.get('type') in types]
 
-        return "".join([f"* {item['example']}: {item['description']}\n" for item in actions_data])
+        header = "You can use only the following actions:\n" if limited else "You can use the following and other actions:\n"
+        actions_str = "".join([f"* {item['example']}: {item['description']}\n" for item in actions_data])
+        return header + actions_str
     except Exception as e:
         print(f"アクションリスト読込エラー: {e}")
         return ""
