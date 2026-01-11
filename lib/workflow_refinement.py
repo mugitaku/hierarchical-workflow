@@ -1,6 +1,6 @@
 import json
 from lib.llm_api import completion_with_backoff
-from lib.utils import extract_json, normalize_workflow_steps, find_duplicate_sids
+from lib.utils import extract_json, normalize_workflow_steps, find_duplicate_sids, find_broken_links, verify_step_types, verify_collection_values
 from lib.config_loader import load_and_format_actions
 
 def refine_workflow_content(steps, user_prompt_origin, format_content, args, router):
@@ -8,20 +8,19 @@ def refine_workflow_content(steps, user_prompt_origin, format_content, args, rou
     Refines the content of the workflow by inserting missing steps, adding conditional branches,
     and making actions more specific.
     """
-    # Step 1: Content Refinement (内容の改善)
-    print("\n=== Phase 3: 最終ワークフローの最適化 (Step 1: Content) ===")
+    
+    print("\n=== Phase 3: Content Refinement (内容の改善) ===")
     
     workflow_json_str = json.dumps(steps, indent=2, ensure_ascii=False)
-    known_actions = load_and_format_actions(args.actions_file, types=['primitive1', 'primitive2', "milestone"])
+    action_list_refine_content = load_and_format_actions(args.actions_file, types=['primitive1', 'primitive2', "milestone"])
 
     refine_prompt_1 = f"""
 <INSTRUCTIONS>
-Refine the workflow showed in WORKFLOW_TO_REFINE section.
-The workflow is to complete the task showed in OVERALL_TASK section.
+If there are errors in the workflow shown in WORKFLOW_TO_REFINE section, fix them.
+The workflow is to complete the task shown in TASK section.
 
-Follow these instructions to refine the workflow content:
-* If task steps are specified in OVERALL_TASK section, you MUST follow the order
-* If the milestone action is specified in task steps, you MUST use the action
+Follow these instructions:
+* If task steps are specified in TASK section, you MUST follow the order
 * Insert missing steps to be successfully executed
 * If there are multiple ways to complete your task,
     include them to the workflow using conditional branches,
@@ -33,8 +32,9 @@ Follow these instructions to refine the workflow content:
 * Adapt the object names and variable names in the steps to your environment written in CONTEXT section
 * Check the agent's location and use "go to <room>" action step properly
 * Only the following actions are allowed in the workflow. 
-  If the milestone action is specified in task steps, you MUST use the action.
-  {known_actions}
+  {action_list_refine_content}
+* If a action step contains multiple actions, split it into multiple steps
+* If the milestone action is specified in task steps, you MUST use the action
 </INSTRUCTIONS>
 
 {user_prompt_origin}
@@ -71,48 +71,76 @@ Follow these instructions to refine the workflow content:
         return steps
 
 
-def refine_workflow_format(steps, format_content, broken_links, args, router):
+def refine_workflow_format(steps, user_prompt_origin, user_prompt_add, format_content, args, router):
     """
     Refines the format of the workflow by ensuring unique sids, consistent links,
     and splitting multi-action steps. It can also fix provided broken links.
     """
-    # Step 2: Format Refinement (フォーマットの修正)
-    print("\n=== Phase 3: 最終ワークフローの最適化 (Step 2: Format) ===")
+    print("\n=== Format Refinement ===")
     
-    intermediate_json_str = json.dumps(steps, indent=2, ensure_ascii=False)
+    # Verify workflow integrity
+    def add_missing_next_sid_recursive(step_list):
+        if not isinstance(step_list, list):
+            return
+        for step in step_list:
+            if step.get('step_type') == 'action' and 'next_sid' not in step:
+                step['next_sid'] = ""
+            
+            if step.get('step_type') == 'for_loop' and 'steps' in step:
+                add_missing_next_sid_recursive(step['steps'])
 
-    broken_links_instruction = ""
-    if broken_links:
-        broken_links_str = "\n".join([f"  - from: {link['from_sid']}, to: {link['to_sid']}, type: {link['link_type']}" for link in broken_links])
-        broken_links_instruction = f"""
-* The following broken links were detected. You MUST fix them.
-{broken_links_str}
-"""
+    add_missing_next_sid_recursive(steps)
 
     duplicate_sids = find_duplicate_sids(steps)
-    duplicate_sids_instruction = ""
+    broken_links = find_broken_links(steps)
+    invalid_step_types = verify_step_types(steps)
+    invalid_collections = verify_collection_values(steps)
+
+    has_errors = duplicate_sids or broken_links or invalid_step_types or invalid_collections
+    
+    if not has_errors:
+        print("  [Info] ワークフローのフォーマットは正常です。Step 2のリファインをスキップします。")
+        return steps
+
+    # --- Error Reporting and Prompt Generation ---
+    error_instructions = []
     if duplicate_sids:
-        duplicate_sids_str = "\n".join([f"  - {sid}" for sid in sorted(duplicate_sids)])
-        duplicate_sids_instruction = f"""
-* The following duplicate sids were detected. You MUST fix them by assigning new unique sids.
-{duplicate_sids_str}
-"""
+        error_instructions.append(
+            f"* The following duplicate sids were detected. You MUST fix them by assigning new unique sids:\n" +
+            "\n".join([f"  - {sid}" for sid in sorted(duplicate_sids)])
+        )
+    if broken_links:
+        error_instructions.append(
+            f"* The following broken links were detected. You MUST fix them:\n" +
+            "\n".join([f"  - from: {link['from_sid']}, to: {link['to_sid']}, type: {link['link_type']}" for link in broken_links])
+        )
+    if invalid_step_types:
+        error_instructions.append(
+            f"* The following steps have invalid `step_type`. You MUST fix them (allowed types are: action, branch, for_loop, break):\n" +
+            "\n".join([f"  - sid: {s['sid']}, invalid_type: '{s['step_type']}'" for s in invalid_step_types])
+        )
+    if invalid_collections:
+        error_instructions.append(
+            f"* The following for_loop steps have invalid `collection` values. You MUST fix them (allowed values for `collection` are: singleton, all_locations, all_closed_containers, all_opened_containers):\n" +
+            "\n".join([f"  - sid: {s['sid']}, invalid_collection: '{s['collection']}'" for s in invalid_collections])
+        )
+
+    error_prompt_section = "\n".join(error_instructions)
+    intermediate_json_str = json.dumps(steps, indent=2, ensure_ascii=False)
 
     refine_prompt_2 = f"""
 <INSTRUCTIONS>
-Refine the workflow showed in WORKFLOW_TO_REFINE section.
-Follow these instructions to fix the workflow format:
-* Conform the workflow to output format
-    * All steps have unique `sid`
-    * All `sid` and `next_sid` links are consistent
-    * If a action step contains multiple actions, split it into multiple steps
-    * Allowed step_type = ['action', 'branch', "for_loop", "break"]
-{broken_links_instruction}
-{duplicate_sids_instruction}
+The workflow in WORKFLOW_TO_REFINE has formatting errors. You MUST fix them based on the following error report.
+The JSON format and structure MUST be preserved.
+When fixing the workflow, ensure it still achieves the original goal described in the TASK section.
+
+<ERROR_REPORT>
+{error_prompt_section}
+</ERROR_REPORT>
 </INSTRUCTIONS>
-
+{user_prompt_origin}
+{user_prompt_add}
 {format_content}
-
 <WORKFLOW_TO_REFINE>
 {intermediate_json_str}
 </WORKFLOW_TO_REFINE>
@@ -133,7 +161,7 @@ Follow these instructions to fix the workflow format:
 
         refined_data = extract_json(response_content)
         if not refined_data:
-            print("  [Warning] Step 2 リファインに失敗しました。Step 1の結果(または元)を維持します。")
+            print("  [Warning] Step 2 リファインに失敗しました。エラーのあるワークフローを返します。")
             return steps
 
         return normalize_workflow_steps(refined_data)
@@ -141,3 +169,4 @@ Follow these instructions to fix the workflow format:
     except Exception as e:
         print(f"  [Error] Step 2 リファイン中にエラーが発生しました: {e}")
         return steps
+
