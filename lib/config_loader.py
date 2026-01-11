@@ -49,5 +49,6 @@ def get_action_definitions(filepath):
     try:
         with open(filepath, "r", encoding="utf-8") as f:
             return json.load(f)
-    except:
+    except json.JSONDecodeError as e:
+        print(f"アクション定義ファイルのJSONデコードエラー: {e}")
         return []
