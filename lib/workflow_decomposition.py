@@ -45,12 +45,15 @@ def sub_workflow_recursive(user_prompt_origin, steps_list, action_definitions, s
             # 定義データ(辞書リスト)を渡す
             if is_decomposable(action_content, action_definitions):
                 if current_depth >= args.max_depth - 1:
-                    action_list_sub = "You can use only the following actions:" + "\n" +load_and_format_actions(args.actions_file, types=['primitive1', 'primitive2'])
+                    limited=True
+                    types=['primitive1', 'primitive2']
                 elif args.disable_db:
-                    action_list_sub = "You can use the following and other actions:" + "\n" +load_and_format_actions(args.actions_file, types=['primitive1', 'primitive2'])
+                    limited=False
+                    types=['primitive1', 'primitive2']
                 else:
-                    action_list_sub = "You can use only the following actions:" + "\n" +load_and_format_actions(args.actions_file, types=['primitive1', 'primitive2', 'complex'])
-                
+                    limited=True
+                    types=['primitive1', 'primitive2', 'complex']
+                action_list_sub = load_and_format_actions(args.actions_file, limited, types)
                 user_prompt_add_sub =f"""
 <TASK>
 Generate workflow from "{action_content}" action if possible,
