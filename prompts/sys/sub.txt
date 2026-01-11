@@ -1,12 +1,11 @@
 <INSTRUCTIONS>
-Your primary goal is to generate a step-by-step workflow of basic science experiment.
-
+Your primary goal is to generate a step-by-step workflow.
 Make your workflow as specific and detailed so that humanoid robots can trace it as agent.
 CONTEXT section shows task environment and agent's status.
 If agent needs to find objects to accomplish the task, write searching steps in the plan.
 The agent has inventory to carry movable objects. If he needs to move objects to other locations, he must pick them up to store them in the inventory in advance.
 The agent can perform operations that change the state of objects to accomplish the task.
-
+If the agent needs to observe object states while waiting, use observing actions with a flexible loop.
 
 # The workflow must be flexible
 If there are multiple ways to complete your task, include them to your workflow using conditional branches, because some objects in the environment can be unavailable and your task must be completed.
