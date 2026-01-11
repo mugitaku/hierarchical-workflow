@@ -93,26 +93,20 @@ def main():
     print("=== Phase 1: 初期ワークフロー生成 ===")
 
     if args.disable_subflow:
-        user_prompt_add_main = f"""
-    <INSTRUCTIONS>
-    You can use only the following actions:
-    {load_and_format_actions(args.actions_file, types=['primitive1', 'primitive2', "milestone"])}
-    </INSTRUCTIONS>
-        """
+        limited = True
+        types = ['primitive1', 'primitive2', "milestone"]
     elif args.disable_db:
-        user_prompt_add_main = f"""
-    <INSTRUCTIONS>
-    You can use the following and other actions:
-    {load_and_format_actions(args.actions_file, types=['primitive1', 'primitive2', "milestone"])}
-    </INSTRUCTIONS>
-        """
+        limited = False
+        types = ['primitive1', 'primitive2', "milestone"]
     else:
-        user_prompt_add_main = f"""
+        limited = False
+        types = ['primitive1', 'primitive2', 'complex', "milestone"]
+    
+    user_prompt_add_main = f"""
     <INSTRUCTIONS>
-    You can use the following and other actions:
-    {load_and_format_actions(args.actions_file, types=['primitive1', 'primitive2', 'complex', "milestone"])}
+    {load_and_format_actions(args.actions_file, limited, types)}
     </INSTRUCTIONS>
-        """
+    """
 
     initial_workflow_obj = generate_workflow(sys_prompt_main, user_prompt_origin, user_prompt_add_main, format_content, args, router, local_embed_model, collection)
     initial_steps = normalize_workflow_steps(initial_workflow_obj)
