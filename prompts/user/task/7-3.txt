@@ -1,0 +1,6 @@
+
+Find the animal with the longest life span, then the shortest life span. The animals are in the 'outside' location.
+
+## Task steps
+1. Focus on the animal with the longest life span.
+2. Focus on the animal with the shortest life span.

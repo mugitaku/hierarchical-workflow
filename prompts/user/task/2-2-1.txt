@@ -1,0 +1,10 @@
+Measure the melting point of lead. 
+
+## task steps
+1. focus on the thermometer.
+2. focus on lead.
+3. measure the melting point of lead.
+4. If the measurement result is above 50.0 degrees, focus on the red box. If the measurement result is below 50.0 degrees, focus on the green box.
+
+## hint
+The lead and the boxes are located around the kitchen.

@@ -1,0 +1,10 @@
+Measure the melting point of chocolate.
+
+## task steps
+1. focus on the thermometer.
+2. focus on chocolate.
+3. measure the melting point of chocolate.
+4. If the measurement result is above -10.0 degrees, focus on the blue box. If the measurement result is below -10.0 degrees, focus on the orange box.
+
+## hint
+The chocolate and the boxes are located around the kitchen.
