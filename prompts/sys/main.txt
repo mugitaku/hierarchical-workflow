@@ -7,7 +7,7 @@ If agent needs to find objects to accomplish the task, write searching steps in 
 The agent will start a random location in the environment. 
 The agent has inventory to carry movable objects. If he needs to move objects to other locations, he must pick them up to store them in the inventory in advance.
 The agent can perform operations that change the state of objects to accomplish the task.
-
+If the agent needs to observe object states while waiting, use observing actions with a flexible loop.
 
 # The workflow must be flexible
 If there are multiple ways to complete your task, include them to your workflow using conditional branches, because some objects in the environment can be unavailable and your task must be completed.
