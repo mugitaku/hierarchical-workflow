@@ -5,15 +5,22 @@ import time
 from litellm import Router
 from dotenv import load_dotenv
 
-load_dotenv("../.env")
+# Get the directory where the current script is located
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Construct absolute paths to the files
+dotenv_path = os.path.join(script_dir, '..', '..', '.env')
+config_path = os.path.join(script_dir, '..', '..', 'litellm.yaml')
+
+load_dotenv(dotenv_path)
 
 def initialize_router():
     try:
-        with open("../litellm.yaml", "r") as f:
+        with open(config_path, "r") as f:
             config = yaml.safe_load(os.path.expandvars(f.read()))
         return Router(model_list=config.get("model_list", []))
     except FileNotFoundError:
-        print("エラー: litellm.yaml が見つかりません。")
+        print(f"エラー: {config_path} が見つかりません。")
         exit(1)
 
 def completion_with_backoff(**kwargs):
