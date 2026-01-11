@@ -34,8 +34,10 @@ def main():
     local_embed_model, collection = initialize_db(args.disable_db)
 
     # --- Output Setup ---
-    user_file_basename = os.path.splitext(os.path.basename(args.user_task_file))[0] if args.user_task_file else "default_task"
-    output_dir = os.path.join("output", user_file_basename)
+    env_file_basename = os.path.splitext(os.path.basename(args.user_env_file))[0] if args.user_env_file else "default_env"
+    task_file_basename = os.path.splitext(os.path.basename(args.user_task_file))[0] if args.user_task_file else "default_task"
+    output_dir_name = f"env_{env_file_basename}_task_{task_file_basename}"
+    output_dir = os.path.join("output", output_dir_name)
     if not os.path.exists(output_dir): os.makedirs(output_dir, exist_ok=True)
     sanitized_model_name = args.model.split(':')[0].split('/')[-1]
     timestamp = datetime.now().strftime("%Y%m%d%H%M")
@@ -69,7 +71,7 @@ def main():
             return
         
         print(f"\n--- Generating diagram for {title} workflow ---")
-        diagram_script = "diagram.py"
+        diagram_script = "lib/diagram.py"
         
         if os.path.exists(diagram_script):
             try:
@@ -112,7 +114,7 @@ def main():
     </INSTRUCTIONS>
         """
 
-    initial_workflow_obj = generate_workflow(sys_prompt_main, user_prompt_origin, user_prompt_add_main, args, router, local_embed_model, collection)
+    initial_workflow_obj = generate_workflow(sys_prompt_main, user_prompt_origin, user_prompt_add_main, format_content, args, router, local_embed_model, collection)
     initial_steps = normalize_workflow_steps(initial_workflow_obj)
 
     if not initial_steps:
@@ -158,9 +160,8 @@ def main():
 
     final_steps = refine_workflow_content(final_steps, user_prompt_origin, format_content, args, router)
     
-    # Find broken links before final format refinement
-    broken_links = find_broken_links(final_steps)
-    final_steps = refine_workflow_format(final_steps, format_content, broken_links, args, router)
+    # Format refinement is now called without passing broken_links
+    final_steps = refine_workflow_format(final_steps, user_prompt_origin, user_prompt_add_main, format_content, args, router)
 
     # ルートオブジェクトで最終的なワークフローをラップする
     final_workflow = {
