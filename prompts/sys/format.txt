@@ -19,7 +19,7 @@ Each node in the plan should be represented as a dictionary entry in the "steps"
       * Value must be a combination of actions and objects defined in ScienceWorld
     * next_sid[str]: sid of the step to transition to
 * Branch step [dict]
-  * Step that describes conditional branching
+  * Step that describes conditional branching. By specifying a former step as next_sid, you can create a flexible loop that will exit under any condition.
   * step_type="branch"
   * Elements:
     * condition[str]: Condition to evaluate for branching. Free-form description, evaluated as true/false by LLM
