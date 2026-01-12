@@ -6,12 +6,6 @@
     "type": "primitive2"
   },
   {
-    "action": "close",
-    "example": "close <obj>",
-    "description": "close an open container object or door to another location",
-    "type": "primitive1"
-  },
-  {
     "action": "deactivate",
     "example": "deactivate <obj>",
     "description": "deactivate the object",
@@ -44,8 +38,14 @@
   {
     "action": "go to",
     "example": "go to <location>",
-    "description": "Agent goes to another location.",
+    "description": "Agent goes to another location. <location> cannot be object",
     "type": "primitive1"
+  },
+  {
+    "action": "look at",
+    "example": "look at <obj>",
+    "description": "look at the state of the object",
+    "type": "primitive2"
   },
   {
     "action": "mix",
@@ -58,12 +58,6 @@
     "example": "move <obj1> to <obj2>",
     "description": "move <obj1> into/onto <obj2>.",
     "type": "primitive2"
-  },
-  {
-    "action": "open",
-    "example": "open <obj>",
-    "description": "open a closed container object or door to another location.",
-    "type": "primitive1"
   },
   {
     "action": "pick up",
@@ -87,12 +81,6 @@
     "action": "use",
     "example": "use <obj1> on <obj2>",
     "description": "Execute the function of <obj1> targeting <obj2>.",
-    "type": "primitive2"
-  },
-  {
-    "action": "look at",
-    "example": "look at <obj>",
-    "description": "look at the object",
     "type": "primitive2"
   },
   {
@@ -129,6 +117,12 @@
     "action": "heat",
     "example": "heat <obj>",
     "description": "heat the object",
+    "type": "complex"
+  },
+  {
+    "action": "measure",
+    "example": "measure the quantity of <obj>",
+    "description": "measure the quantity, such as temperature or time",
     "type": "complex"
   },
   {
