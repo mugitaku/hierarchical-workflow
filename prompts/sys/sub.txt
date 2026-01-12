@@ -1,7 +1,7 @@
 <INSTRUCTIONS>
 Your primary goal is to generate a step-by-step workflow.
 Make your workflow as specific and detailed so that humanoid robots can trace it as agent.
-CONTEXT section shows task environment and agent's status.
+CONTEXT section shows task environment and agent's status. If the agent needs to see objects in a location, he must go to the location beforehand.
 If agent needs to find objects to accomplish the task, write searching steps in the plan.
 The agent has inventory to carry movable objects. If he needs to move objects to other locations, he must pick them up to store them in the inventory in advance.
 The agent can perform operations that change the state of objects to accomplish the task.
