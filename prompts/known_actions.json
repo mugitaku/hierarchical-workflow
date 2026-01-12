@@ -62,8 +62,14 @@
   {
     "action": "go to",
     "example": "go to <location>",
-    "description": "Agent goes to another location.",
+    "description": "Agent goes to another location. <location> cannot be object",
     "type": "primitive1"
+  },
+  {
+    "action": "look at",
+    "example": "look at <obj>",
+    "description": "look at the state of the object",
+    "type": "primitive2"
   },
   {
     "action": "mix",
@@ -108,12 +114,6 @@
     "type": "primitive2"
   },
   {
-    "action": "look at",
-    "example": "look at <obj>",
-    "description": "look at the object",
-    "type": "primitive2"
-  },
-  {
     "action": "wait1",
     "example": "wait1",
     "description": "do nothing and wait for one time unit to elapse",
@@ -147,6 +147,12 @@
     "action": "heat",
     "example": "heat <obj>",
     "description": "heat the object",
+    "type": "complex"
+  },
+  {
+    "action": "measure",
+    "example": "measure the quantity of <obj>",
+    "description": "measure the quantity, such as temperature or time",
     "type": "complex"
   },
   {
