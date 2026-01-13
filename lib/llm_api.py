@@ -20,12 +20,12 @@ def initialize_router():
             config = yaml.safe_load(os.path.expandvars(f.read()))
         return Router(model_list=config.get("model_list", []))
     except FileNotFoundError:
-        print(f"エラー: {config_path} が見つかりません。")
+        print(f"Error: {config_path} not found.")
         exit(1)
 
 def completion_with_backoff(**kwargs):
     """
-    RateLimitError発生時に指数関数的バックオフでリトライを行うラッパー関数
+    Wrapper function to retry with exponential backoff when a RateLimitError occurs.
     """
     router = kwargs.pop("router", None)
     if not router:
@@ -51,8 +51,8 @@ def completion_with_backoff(**kwargs):
                 
                 if attempt < max_retries:
                     delay = (base_delay * (2 ** attempt)) + random.uniform(0, 1)
-                    print(f"  [Retry] エラー発生: {e}")
-                    print(f"  -> {delay:.2f}秒待機してリトライします... (試行 {attempt + 1}/{max_retries})")
+                    print(f"  [Retry] Error occurred: {e}")
+                    print(f"  -> Waiting {delay:.2f} seconds to retry... (Attempt {attempt + 1}/{max_retries})")
                     time.sleep(delay)
                     continue
             
