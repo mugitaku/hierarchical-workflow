@@ -16,7 +16,7 @@ from lib.workflow_refinement import refine_workflow_content, refine_workflow_for
 def main():
     args = parse_arguments()
 
-    # 1. アクション定義の取得 (辞書リスト全体を取得)
+    # 1. Get action definitions (gets the entire list of dictionaries)
     action_definitions = get_action_definitions(args.actions_file)
 
     # 2. prompts
@@ -43,10 +43,10 @@ def main():
     timestamp = datetime.now().strftime("%Y%m%d%H%M")
 
     def write_workflow_to_txt(filename, workflow_obj, workflow_title):
-        """引数とワークフローを指定されたファイルに書き込む"""
+        """Writes arguments and workflow to the specified file"""
         try:
             with open(filename, "w", encoding="utf-8") as f:
-                # 引数を書き込む
+                # Write arguments
                 f.write("Command line arguments:\n")
                 f.write("------------------------\n")
                 for arg, value in vars(args).items():
@@ -54,16 +54,16 @@ def main():
                 
                 f.write("\n\n")
 
-                # ワークフローを書き込む
+                # Write workflow
                 f.write(f"{workflow_title}:\n")
                 f.write("------------------------\n")
                 if workflow_obj:
                     f.write(json.dumps(workflow_obj, indent=2, ensure_ascii=False))
                 else:
                     f.write("None")
-            print(f"\n✅ {workflow_title}を '{filename}' に保存しました。")
+            print(f"\n✅ Saved {workflow_title} to '{filename}'.")
         except Exception as e:
-            print(f"\n❌ {workflow_title}の保存中にエラーが発生しました: {e}")
+            print(f"\n❌ An error occurred while saving {workflow_title}: {e}")
     
     def generate_diagram_for_file(filename, title):
         """Generates a diagram for a given workflow file."""
@@ -75,44 +75,38 @@ def main():
         
         if os.path.exists(diagram_script):
             try:
-                # 同じPythonインタプリタを使用してdiagram.pyを実行
+                # Execute diagram.py using the same Python interpreter
                 cmd = [sys.executable, diagram_script, filename]
                 print(f"Running: {' '.join(cmd)}")
                 
                 subprocess.run(cmd, check=True)
-                print(f"✅ {title} のダイアグラム生成が完了しました。")
+                print(f"✅ Diagram generation for {title} completed.")
                 
             except subprocess.CalledProcessError as e:
-                print(f"❌ {title} の diagram.py の実行中にエラーが発生しました: {e}")
+                print(f"❌ An error occurred while executing diagram.py for {title}: {e}")
             except Exception as e:
-                print(f"❌ {title} のダイアグラム生成中に予期せぬエラーが発生しました: {e}")
+                print(f"❌ An unexpected error occurred during diagram generation for {title}: {e}")
         else:
-            print(f"❌ '{diagram_script}' が現在のディレクトリに見つかりません。")
+            print(f"❌ '{diagram_script}' not found in the current directory.")
 
-    # 3. 初期ワークフロー生成
-    print("=== Phase 1: 初期ワークフロー生成 ===")
+    # 3. Initial Workflow Generation
+    print("=== Phase 1: Initial Workflow Generation ===")
 
     if args.disable_subflow:
-        limited = True
-        types = ['primitive1', 'primitive2', "milestone"]
+        action_limited = True
+        action_types = ['primitive1', 'primitive2', "milestone"]
     elif args.disable_db:
-        limited = False
-        types = ['primitive1', 'primitive2', "milestone"]
+        action_limited = False
+        action_types = ['primitive1', 'primitive2', "milestone"]
     else:
-        limited = False
-        types = ['primitive1', 'primitive2', 'complex', "milestone"]
-    
-    user_prompt_add_main = f"""
-    <INSTRUCTIONS>
-    {load_and_format_actions(args.actions_file, limited, types)}
-    </INSTRUCTIONS>
-    """
+        action_limited = False
+        action_types = ['primitive1', 'primitive2', 'complex', "milestone"]
 
-    initial_workflow_obj = generate_workflow(sys_prompt_main, user_prompt_origin, user_prompt_add_main, format_content, args, router, local_embed_model, collection)
+    initial_workflow_obj = generate_workflow(sys_prompt_main, user_prompt_origin, action_limited, action_types, format_content, args, router, local_embed_model, collection)
     initial_steps = normalize_workflow_steps(initial_workflow_obj)
 
     if not initial_steps:
-        print("初期生成に失敗しました。終了します。")
+        print("Initial generation failed. Exiting.")
         exit(1)
 
     initial_workflow_wrapped = {
@@ -131,7 +125,7 @@ def main():
         final_steps = initial_steps
         pre_refined_final_steps = initial_steps
     else:
-        print("\n=== Phase 2: アクション照合とサブフロー生成 ===")
+        print("\n=== Phase 2: Action Matching and Subflow Generation ===")
         if args.disable_example:
             sys_prompt_sub = load_file_content(args.sys_sub_file) + "\n" + format_content
         else:
@@ -155,9 +149,9 @@ def main():
     final_steps = refine_workflow_content(final_steps, user_prompt_origin, format_content, args, router)
     
     # Format refinement is now called without passing broken_links
-    final_steps = refine_workflow_format(final_steps, user_prompt_origin, user_prompt_add_main, format_content, args, router)
+    final_steps = refine_workflow_format(final_steps, user_prompt_origin, action_limited, action_types, format_content, args, router)
 
-    # ルートオブジェクトで最終的なワークフローをラップする
+    # Wrap the final workflow in a root object
     final_workflow = {
         "sid": "root",
         "step_type": "for_loop",
@@ -209,7 +203,7 @@ def main():
     else:
         print("✅ Final workflow validation successful. No invalid collection values found.")
     
-    # --- 結果出力 ---
+    # --- Output Results ---
     print("\n" + "="*30)
     print("FINAL WORKFLOW JSON")
     print("="*30)
