@@ -1,51 +1,51 @@
 import chromadb
 import json
 
-# データベースのパス（Generatorの設定と合わせる）
+# Database path (must match Generator's settings)
 DB_PATH = "./workflow_db"
 
 def check_database():
     try:
-        # 1. DBへの接続
+        # 1. Connect to DB
         client = chromadb.PersistentClient(path=DB_PATH)
         collection = client.get_collection(name="subflows")
         
-        # 2. データ件数の取得
+        # 2. Get data count
         count = collection.count()
-        print(f"=== データベースステータス ===")
-        print(f"保存場所: {DB_PATH}")
-        print(f"登録件数: {count} 件")
+        print(f"=== Database Status ===")
+        print(f"Location: {DB_PATH}")
+        print(f"Number of entries: {count}")
         print("=" * 30)
 
         if count == 0:
-            print("データは空です。")
+            print("The database is empty.")
             return
 
-        # 3. データの取得 (全件取得)
-        # ※件数が多い場合は limit=10 などを指定してください
+        # 3. Get data (get all)
+        # * If there are many items, specify something like limit=10
         data = collection.get()
 
-        print("\n=== 登録データ一覧 ===")
+        print("\n=== Registered Data List ===")
         for i in range(len(data['ids'])):
             print(f"ID: {data['ids'][i]}")
             
-            # Metadata (タスク名など)
+            # Metadata (task name, etc.)
             metadata = data['metadatas'][i]
-            print(f"Task Name: {metadata.get('task', 'N/A')}")
+            print(f"Task Name: {metadata.get('name', 'N/A')}")
             
-            # Document (中身のJSONテキスト)
-            # 長すぎる場合は先頭だけ表示して省略
+            # Document (JSON text inside)
+            # If too long, display only the beginning and omit the rest
             doc_content = data['documents'][i]
             if len(doc_content) > 200:
-                print(f"Content: {doc_content[:200]} ... (省略)")
+                print(f"Content: {doc_content[:200]} ... (omitted)")
             else:
                 print(f"Content: {doc_content}")
             
             print("-" * 30)
 
     except Exception as e:
-        print(f"エラーが発生しました: {e}")
-        print("ヒント: データベースフォルダが存在しないか、パスが間違っている可能性があります。")
+        print(f"An error occurred: {e}")
+        print("Hint: The database folder may not exist or the path may be incorrect.")
 
 if __name__ == "__main__":
     check_database()
