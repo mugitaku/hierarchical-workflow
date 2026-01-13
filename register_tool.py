@@ -6,43 +6,43 @@ import glob
 import chromadb
 from sentence_transformers import SentenceTransformer
 
-# --- 設定 ---
+# --- Settings ---
 DB_PATH = "./workflow_db"
 EMBEDDING_MODEL_NAME = 'paraphrase-multilingual-MiniLM-L12-v2'
 
-# モデルの初期化 (ループ内で毎回ロードしないようにグローバルで一度だけ行う)
-print(f"モデル読み込み中... ({EMBEDDING_MODEL_NAME})")
+# Initialize model (load only once globally to avoid reloading in a loop)
+print(f"Loading model... ({EMBEDDING_MODEL_NAME})")
 model = SentenceTransformer(EMBEDDING_MODEL_NAME)
 
-# DBクライアントの初期化
+# Initialize DB client
 client = chromadb.PersistentClient(path=DB_PATH)
 collection = client.get_or_create_collection(name="subflows")
 
 def register_subflow(json_path):
-    """単一のJSONファイルを登録する関数"""
+    """Function to register a single JSON file"""
     try:
         if not os.path.exists(json_path):
-            print(f"エラー: ファイルが見つかりません -> {json_path}")
+            print(f"Error: File not found -> {json_path}")
             return False
 
         with open(json_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
 
-        task_description = data.get("task")
+        task_description = data.get("name")
         steps_obj = data.get("steps")
-        # objects は必須ではないかもしれませんが、存在すれば読み込まれます
+        # objects may not be required, but will be loaded if present
 
         if not task_description or not steps_obj:
-            print(f"[スキップ] フォーマット不正: {os.path.basename(json_path)} ('task' と 'steps' が必要)")
+            print(f"[Skip] Invalid format: {os.path.basename(json_path)} ('name' and 'steps' are required)")
             return False
 
-        # 既存チェック (同じタスク名がすでに登録されていないか簡易チェック)
-        existing = collection.get(where={"task": task_description})
+        # Check for existence (simple check if the same name is already registered)
+        existing = collection.get(where={"name": task_description})
         if existing['ids']:
-            print(f"[スキップ] 登録済み: {task_description}")
+            print(f"[Skip] Already registered: {task_description}")
             return False
 
-        # ベクトル化 & 登録
+        # Vectorize & register
         workflow_content = json.dumps(data, indent=2, ensure_ascii=False)
         
         vector = model.encode(task_description).tolist()
@@ -52,49 +52,44 @@ def register_subflow(json_path):
             ids=[new_id],
             embeddings=[vector],
             documents=[workflow_content],
-            metadatas=[{"task": task_description}]
+            metadatas=[{"name": task_description}]
         )
 
-        print(f"[登録成功] {task_description} (from {os.path.basename(json_path)})")
+        print(f"[Registration successful] {task_description} (from {os.path.basename(json_path)})")
         return True
 
     except Exception as e:
-        print(f"[エラー] {os.path.basename(json_path)}: {e}")
+        print(f"[Error] {os.path.basename(json_path)}: {e}")
         return False
 
 def register_directory(dir_path):
-    """ディレクトリ内の全JSONを登録する関数"""
+    """Function to register all JSON files in a directory"""
     if not os.path.isdir(dir_path):
-        print(f"エラー: ディレクトリが見つかりません -> {dir_path}")
+        print(f"Error: Directory not found -> {dir_path}")
         return
 
-    # jsonファイルを検索
+    # Search for json files
     json_files = glob.glob(os.path.join(dir_path, "*.json"))
     
     if not json_files:
-        print(f"指定されたディレクトリにJSONファイルがありません: {dir_path}")
+        print(f"No JSON files found in the specified directory: {dir_path}")
         return
 
-    print(f"\n--- ディレクトリ一括登録開始: {dir_path} ({len(json_files)}ファイル) ---")
+    print(f"\n--- Starting bulk registration for directory: {dir_path} ({len(json_files)} files) ---")
     success_count = 0
     for json_file in json_files:
         if register_subflow(json_file):
             success_count += 1
     
     print("-" * 30)
-    print(f"完了: {success_count} 件を新規登録しました。")
+    print(f"Complete: {success_count} new items registered.")
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("使い方:")
-        print("  単一ファイル: python register_tool.py subflows/my_task.json")
-        print("  フォルダ一括: python register_tool.py subflows/")
+    target_path = sys.argv[1]
+    
+    if os.path.isdir(target_path):
+        # If it's a directory
+        register_directory(target_path)
     else:
-        target_path = sys.argv[1]
-        
-        if os.path.isdir(target_path):
-            # ディレクトリの場合
-            register_directory(target_path)
-        else:
-            # ファイルの場合
-            register_subflow(target_path)
+        # If it's a file
+        register_subflow(target_path)
