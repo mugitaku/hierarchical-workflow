@@ -16,8 +16,8 @@ def search_subflows(collection, local_embed_model, subtasks, disable_db):
     if not subtasks or disable_db:
         return found_subflows, reference_info
         
-    for subtask in subtasks:
-        subtask = subtask.strip()
+    for original_subtask in subtasks[:]:
+        subtask = original_subtask.strip()
         if not subtask: continue
         try:
             query_vector = local_embed_model.encode(subtask).tolist()
@@ -25,14 +25,18 @@ def search_subflows(collection, local_embed_model, subtasks, disable_db):
 
             if results['distances'] and len(results['distances'][0]) > 0:
                 dist = results['distances'][0][0]
-                found_task = results['metadatas'][0][0]['task']
+                found_task = results['metadatas'][0][0]['name']
                 print(f"distance {int(dist)}: ", subtask, "VS", found_task)
                 found_doc = results['documents'][0][0]
                 if dist <= 25:
+                    # remove subtask from subtasks list
+                    subtasks.remove(original_subtask)
+                    
+                    # add subflow candidates to list
                     if found_task not in found_subflows:
                         found_subflows.append(found_task)
                         reference_info += f"\n{found_doc}\n"
         except Exception as e:
-            print(f"  [Warning] DB検索中にエラー: {e}")
+            print(f"  [Warning] Error during DB search: {e}")
             continue
     return found_subflows, reference_info
