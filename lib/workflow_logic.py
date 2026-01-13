@@ -1,36 +1,35 @@
-import uuid
 from lib.llm_api import completion_with_backoff
 from lib.utils import extract_json, normalize_workflow_steps
 from lib.config_loader import load_file_content, load_and_format_actions
 from lib.db_operations import search_subflows
 from lib.workflow_refinement import refine_workflow_format
 
-def generate_workflow(sys_prompt, user_prompt_origin, user_prompt_add, format_content, args, router, local_embed_model, collection):
-    print(f"\n>>> 生成プロセス開始")
+def generate_workflow(sys_prompt, user_prompt_origin, action_limited, action_types, format_content, args, router, local_embed_model, collection):
+    print(f"\n>>> Starting generation process")
     # Step 1. Task Decomposition
     reference_info = ""
     # primitive1 is routine action, so it is not used in subtask decomposition.
     if args.disable_db:
-        limited=True
-        types=['primitive2']
+        action_limited_decomp=True
+        action_types_decomp=['primitive2']
     else:
-        limited=True
-        types=['primitive2', 'complex']
+        action_limited_decomp=True
+        action_types_decomp=['primitive2', 'complex']
 
-    action_list_main = load_and_format_actions(args.actions_file, limited, types)
     decomp_prompt = f"""
     <INSTRUCTIONS>
-    List major subtasks to complete the following task: "{user_prompt_origin}". 
-    Abstract all the object names of the subtasks (e.g. "cup" is abstracted to "container", "stove" is abstracted to "heater", etc)
+    List major subtasks to complete the following task: "{user_prompt_origin}"
     </INSTRUCTIONS>
     <CONSTRAINTS>
-    * Subtasks MUST be separated by commas.
-    * Subtasks MUST be 10 words or less.
-    * The number of subtasks MUST be between 20 and 30.
-    * DO NOT use numbering or newlines.
-    * DO NOT output thinking process.
-    * DO NOT output duplicate subtasks.
-    * {action_list_main}
+    * Abstract all the object names of your subtasks 
+        (e.g. "machine" is abstracted to "object", "cup" is abstracted to "container", "stove" is abstracted to "heater", etc)
+    * Subtasks MUST be separated by commas
+    * Subtasks MUST be 15 words or less
+    * The number of subtasks MUST be between 40 and 50
+    * DO NOT use numbering or newlines
+    * DO NOT output thinking process
+    * DO NOT output duplicate subtasks
+    * {load_and_format_actions(args.actions_file, action_limited_decomp, action_types_decomp)}
     </CONSTRAINTS>
     <OUTPUT_FORMAT>
     subtask1, subtask2, ...
@@ -42,47 +41,55 @@ def generate_workflow(sys_prompt, user_prompt_origin, user_prompt_add, format_co
             model=args.model,
             messages=[{"role": "user", "content": decomp_prompt}],
             temperature=args.temperature,
-            router=router
+            router=router,
+            max_tokens=2048
         )
-        # カンマで分割
-        raw_subtasks = decomp_resp['choices'][0]['message']['content'].split(',')
-        
+        # Split by comma and deduplicate
+        raw_subtasks_with_duplicates = decomp_resp['choices'][0]['message']['content'].split(',')
         subtasks = []
-        if len(raw_subtasks) > 30:
-            subtasks = raw_subtasks[:30]
-        else:
-            subtasks = raw_subtasks
+        seen = set()
+        for task in raw_subtasks_with_duplicates:
+            task = task.strip()
+            if task and task not in seen:
+                seen.add(task)
+                subtasks.append(task)
 
     except Exception as e:
-        print(f"  [Warning] タスク分解中にエラーが発生しました（スキップします）: {e}")
+        print(f"  [Warning] An error occurred during task decomposition (skipping): {e}")
         subtasks = []
 
-    # Step 2. DB検索
+    # Step 2. DB Search
     if not args.disable_db:
         found_subflows, reference_info = search_subflows(collection, local_embed_model, subtasks, args.disable_db)
     else:
         found_subflows, reference_info = [], ""
 
-    # Step 3. メイン生成
+    # Step 3. Main Generation
     if reference_info:
         user_prompt = f"""
 {user_prompt_origin}
 <INSTRUCTIONS>
-Refer to the following subtasks and workflows, adapting the object names and variable names to your task.
-subtasks: {subtasks}
-workflows:
+Refer to the following subtask candidates and the steps of workflow candidates to make specific and detailed workflow.
+Adapt the object names and variable names to your task.
+
+subtask candidates: {subtasks}
+
+workflow candidates:
 {reference_info}
+
+{load_and_format_actions(args.actions_file, action_limited, action_types)}
 </INSTRUCTIONS>
-{user_prompt_add}
     """
+
     else:
         user_prompt = f"""
 {user_prompt_origin}
 <INSTRUCTIONS>
-Refer to the following subtasks, adapting the object names and variable names to your task.
-{subtasks}
+Refer to the following subtask candidates to make specific and detailed workflow.
+subtask candidates: {subtasks}
+
+{load_and_format_actions(args.actions_file, action_limited, action_types)}
 </INSTRUCTIONS>
-{user_prompt_add}
     """
 
     try:
@@ -109,12 +116,12 @@ Refer to the following subtasks, adapting the object names and variable names to
         
         # Perform initial format refinement
         print("\n--- Initial Format Refinement ---")
-        refined_steps = refine_workflow_format(steps, user_prompt_origin, user_prompt_add, format_content, args, router)
+        refined_steps = refine_workflow_format(steps, user_prompt_origin, action_limited, action_types, format_content, args, router)
         
         return refined_steps
 
     except Exception as e:
-        print(f"  [Error] ワークフロー生成API呼び出し中にエラーが発生しました: {e}")
+        print(f"  [Error] An error occurred during the workflow generation API call: {e}")
         return None
 
 
