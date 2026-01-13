@@ -6,34 +6,42 @@ import sys
 def generate_dot_from_json(data_input):
     """
     Generates a graphviz.Digraph object from a JSON string or a text file containing JSON.
+    It robustly finds the JSON block even if the file has a text header.
     """
     data = None
     
-    # 1. そのままJSONとしてパースを試みる (互換性維持)
+    # 1. Try to parse the whole string as JSON for clean JSON files.
     try:
         data = json.loads(data_input)
     except json.JSONDecodeError:
-        # 2. テキスト形式 ("Final Workflow:" ヘッダーが含まれる場合) からの抽出を試みる
-        target_header = "Final Workflow:"
-        if target_header in data_input:
-            # ヘッダー以降のテキストを取得
-            header_index = data_input.find(target_header)
-            content_after_header = data_input[header_index:]
-            
-            # 最初の '{' を探す
-            json_start_index = content_after_header.find('{')
-            if json_start_index != -1:
-                json_str = content_after_header[json_start_index:]
-                try:
-                    data = json.loads(json_str)
-                except json.JSONDecodeError:
-                    pass
+        # If it fails, assume it's a text file with a header.
+        # Find the start of the JSON block (first '{' or '[').
+        first_brace = data_input.find('{')
+        first_bracket = data_input.find('[')
 
-    # JSONが見つからなかった、またはパースできなかった場合
+        start_index = -1
+
+        # Find the earliest occurrence of either character
+        if first_brace != -1 and first_bracket != -1:
+            start_index = min(first_brace, first_bracket)
+        elif first_brace != -1:
+            start_index = first_brace
+        elif first_bracket != -1:
+            start_index = first_bracket
+        
+        # If a starting character was found, try to parse from there
+        if start_index != -1:
+            json_str = data_input[start_index:]
+            try:
+                data = json.loads(json_str)
+            except json.JSONDecodeError:
+                data = None # It wasn't valid JSON after all
+
+    # If JSON could not be parsed, return None
     if data is None:
         return None 
 
-    # --- 以下、グラフ生成ロジック (変更なし) ---
+    # --- Below is the graph generation logic (unchanged) ---
     dot = graphviz.Digraph(comment='ScienceWorld Workflow', format='svg')
     dot.attr(rankdir='TB')  # Top to Bottom layout
 
@@ -79,10 +87,10 @@ def render_dot(dot, output_filename):
     """
     try:
         output_path = dot.render(output_filename, view=False, cleanup=True)
-        print(f"画像生成完了: {output_path}")
+        print(f"Image generation complete: {output_path}")
     except Exception as e:
         print(f"Graphviz Error: {e}")
-        print("ヒント: 'sudo apt install graphviz' は実行しましたか？")
+        print("Hint: Have you run 'sudo apt install graphviz'?")
 
 def render_dot_source(dot_source, output_filename):
     """
@@ -91,10 +99,10 @@ def render_dot_source(dot_source, output_filename):
     try:
         source = graphviz.Source(dot_source, format='svg')
         output_path = source.render(output_filename, view=False, cleanup=True)
-        print(f"画像生成完了: {output_path}")
+        print(f"Image generation complete: {output_path}")
     except Exception as e:
         print(f"Graphviz Error: {e}")
-        print("ヒント: 'sudo apt install graphviz' は実行しましたか？")
+        print("Hint: Have you run 'sudo apt install graphviz'?")
 
 
 if __name__ == "__main__":
