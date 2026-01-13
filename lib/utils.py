@@ -3,19 +3,19 @@ import json
 import html
 
 def extract_json(text):
-    """MarkdownコードブロックなどからJSON部分を抽出する (強化版, v4)"""
+    """Extracts the JSON part from a string, such as a Markdown code block (enhanced version, v4)"""
     # Unescape HTML entities
     text = html.unescape(text)
 
-    # <think>ブロックの除去
+    # Remove <think> blocks
     text = re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL).strip()
     
-    # <steps>タグがあれば抽出
+    # Extract from <steps> tag if present
     steps_match = re.search(r'<steps>\s*(.*?)\s*</steps>', text, re.DOTALL)
     if steps_match:
         text = steps_match.group(1).strip()
 
-    # Markdownコードブロックの抽出
+    # Extract Markdown code block
     code_block_match = re.search(r'```json\s*(.*?)\s*```', text, re.DOTALL)
     if not code_block_match:
         code_block_match = re.search(r'```\s*(.*?)\s*```', text, re.DOTALL)
@@ -23,15 +23,15 @@ def extract_json(text):
     if code_block_match:
         text = code_block_match.group(1)
     
-    # コメント削除 (行末のカンマを巻き込まないように注意)
+    # Remove comments (be careful not to remove trailing commas)
     text = re.sub(r'/\*.*?\*/', '', text, flags=re.DOTALL)
-    # 行コメント削除: // の後にカンマがある場合を救済するため、単純削除ではなく改行のみ残す等の工夫も可能だが
-    # ここではシンプルに削除しつつ、パース前処理でカンマ補完を試みる
+    # Remove line comments: To rescue cases where there is a comma after //, it is possible to leave only newlines instead of simple deletion,
+    # but here we simply delete and try to complete with commas in the pre-parsing process.
     text = re.sub(r'//.*', '', text)
 
     clean_text = text.strip()
 
-    # JSONの開始・終了位置を特定
+    # Identify JSON start and end positions
     start_pos = -1
     first_brace = clean_text.find('{')
     first_bracket = clean_text.find('[')
@@ -40,7 +40,7 @@ def extract_json(text):
     else: start_pos = min(first_brace, first_bracket)
 
     if start_pos == -1:
-        print("JSONの開始文字 ('{' または '[') が見つかりません。")
+        print("JSON start character ('{' or '[') not found.")
         return None
 
     end_pos = -1
@@ -49,12 +49,12 @@ def extract_json(text):
     end_pos = max(last_brace, last_bracket)
 
     if end_pos == -1:
-        print("JSONの終了文字 ('}' または ']') が見つかりません（出力が途切れている可能性があります）。")
+        print("JSON end character ('}' or ']') not found (output may be truncated).")
         return None
 
     json_candidate_str = clean_text[start_pos:end_pos+1]
 
-    # 一般的なエラー（プロパティ間のカンマ漏れ）の修正試行
+    # Attempt to fix common errors (missing commas between properties)
     json_str_fixed = re.sub(r'"\s*\n\s*"', '",\n"', json_candidate_str)
 
     try:
@@ -63,20 +63,20 @@ def extract_json(text):
         try:
             return json.loads(json_candidate_str)
         except json.JSONDecodeError as e1:
-            # Attempt 3: 二重括弧 {{...}} または [[...]] の場合のみ剥がすように変更
-            # 単一の {...} を剥がすと Extra data エラーになるため防止する
+            # Attempt 3: Changed to strip only in the case of double brackets {{...}} or [[...]]
+            # Stripping a single {...} is prevented because it causes an Extra data error.
             if (json_candidate_str.startswith('{{') and json_candidate_str.endswith('}}')) or \
                (json_candidate_str.startswith('[[') and json_candidate_str.endswith(']]')):
                 inner_str = json_candidate_str[1:-1]
                 try:
-                    print("  [Info] 二重括弧を検出しました。外側を剥がして再試行します。")
+                    print("  [Info] Double brackets detected. Retrying with outer brackets stripped.")
                     return json.loads(inner_str)
                 except json.JSONDecodeError:
                     pass
             
-            print(f"JSONパースエラー。リカバリー不能。エラー: {e1}")
-            # デバッグ用に末尾を表示（途切れ確認用）
-            print(f"文字列末尾(last 100 chars): ...{json_candidate_str[-100:]}")
+            print(f"JSON parse error. Unrecoverable. Error: {e1}")
+            # Display the end of the string for debugging (to check for truncation)
+            print(f"End of string (last 100 chars): ...{json_candidate_str[-100:]}")
             return None
 
 def get_all_sids(steps):
@@ -207,7 +207,9 @@ def verify_collection_values(steps):
         for step in step_list:
             if step.get('step_type') == 'for_loop':
                 collection_value = step.get('collection')
-                if collection_value not in allowed_collections:
+                # A collection must be one of the predefined string keywords.
+                # Literal lists are not allowed.
+                if isinstance(collection_value, list) or collection_value not in allowed_collections:
                     invalid_steps.append({
                         "sid": step.get('sid', 'N/A'),
                         "collection": collection_value
