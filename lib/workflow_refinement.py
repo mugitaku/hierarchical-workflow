@@ -32,14 +32,14 @@ def refine_workflow_content(steps, user_prompt_origin, format_content, args, rou
     and making actions more specific.
     """
     
-    print("\n=== Phase 3: Content Refinement (内容の改善) ===")
+    print("\n=== Phase 3: Content Refinement ===")
     
     workflow_json_str = json.dumps(steps, indent=2, ensure_ascii=False)
     action_list_refine_content = load_and_format_actions(args.actions_file, True, ['primitive1', 'primitive2', "milestone"])
 
     refine_prompt_1 = f"""
 <INSTRUCTIONS>
-If there are errors in the workflow shown in WORKFLOW_TO_REFINE section, fix them.
+Your primary goal is to fix errors of the workflow shown in WORKFLOW_TO_REFINE section to make specific, detailed, and executable workflow.
 The workflow is to complete the task shown in TASK section.
 
 Follow these instructions:
@@ -53,10 +53,11 @@ Follow these instructions:
     {{"sid": "machine_1", "step_type": "action", "action": "use machine 1", "next_sid": "pick_up_product"}},
     {{"sid": "machine_2", "step_type": "action", "action": "use machine 2", "next_sid": "pick_up_product"}}
 * Adapt the object names and variable names in the steps to your environment written in CONTEXT section
-* Check the agent's location and use "go to <room>" action step properly
+* Use "go to <location>" action step properly, because if the agent needs to see objects at a location,
+    he must go to the location beforehand.
 * {action_list_refine_content}
 * If a action step contains multiple actions, split it into multiple steps
-* If the milestone action is specified in task steps, you MUST use the action
+* If the milestone action is specified in task steps, you MUST include it so any routes path the action
 </INSTRUCTIONS>
 
 {user_prompt_origin}
@@ -85,15 +86,15 @@ Follow these instructions:
         if refined_data:
             return normalize_workflow_steps(refined_data)
         else:
-            print("  [Warning] Step 1 リファインに失敗しました。元のワークフローを使用します。")
+            print("  [Warning] Step 1 refinement failed. Using original workflow.")
             return steps
 
     except Exception as e:
-        print(f"  [Error] Step 1 リファイン中にエラーが発生しました: {e}")
+        print(f"  [Error] An error occurred during Step 1 refinement: {e}")
         return steps
 
 
-def refine_workflow_format(steps, user_prompt_origin, user_prompt_add, format_content, args, router):
+def refine_workflow_format(steps, user_prompt_origin, action_limited, action_types, format_content, args, router):
     """
     Refines the format of the workflow by ensuring unique sids, consistent links,
     and splitting multi-action steps. It can also fix provided broken links.
@@ -124,7 +125,7 @@ def refine_workflow_format(steps, user_prompt_origin, user_prompt_add, format_co
     has_errors = duplicate_sids or broken_links or invalid_step_types or invalid_collections or invalid_actions
     
     if not has_errors:
-        print("  [Info] ワークフローのフォーマットは正常です。Step 2のリファインをスキップします。")
+        print("  [Info] Workflow format is valid. Skipping Step 2 refinement.")
         return steps
 
     # --- Error Reporting and Prompt Generation ---
@@ -165,13 +166,13 @@ The workflow in WORKFLOW_TO_REFINE has formatting errors. You MUST fix them base
 The JSON format and structure MUST be preserved.
 When fixing the workflow, ensure it still achieves the original goal described in the TASK section.
 
+{load_and_format_actions(args.actions_file, action_limited, action_types)}
+{user_prompt_origin}
+{format_content}
 <ERROR_REPORT>
 {error_prompt_section}
 </ERROR_REPORT>
 </INSTRUCTIONS>
-{user_prompt_origin}
-{user_prompt_add}
-{format_content}
 <WORKFLOW_TO_REFINE>
 {intermediate_json_str}
 </WORKFLOW_TO_REFINE>
@@ -192,12 +193,12 @@ When fixing the workflow, ensure it still achieves the original goal described i
 
         refined_data = extract_json(response_content)
         if not refined_data:
-            print("  [Warning] Step 2 リファインに失敗しました。エラーのあるワークフローを返します。")
+            print("  [Warning] Step 2 refinement failed. Returning workflow with errors.")
             return steps
 
         return normalize_workflow_steps(refined_data)
 
     except Exception as e:
-        print(f"  [Error] Step 2 リファイン中にエラーが発生しました: {e}")
+        print(f"  [Error] An error occurred during Step 2 refinement: {e}")
         return steps
 
