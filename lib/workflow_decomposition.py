@@ -7,9 +7,9 @@ from lib.workflow_logic import generate_workflow
 
 def is_decomposable(action_str, action_definitions):
     """
-    アクション文字列を定義リストと照合し、分解可能かどうかを判断する。
-    最も長くマッチしたアクション定義を探し、そのtypeが'complex'か、または定義が見つからなければTrueを返す。
-    typeが'primitive1', 'primitive2', 'milestone'であればFalseを返す。
+    Checks an action string against a list of definitions to determine if it is decomposable.
+    It finds the longest matching action definition and returns True if its type is 'complex' or if no definition is found.
+    Returns False if the type is 'primitive1', 'primitive2', or 'milestone'.
     """
     if not action_str: return False # Empty action is not decomposable
     
@@ -31,43 +31,43 @@ def is_decomposable(action_str, action_definitions):
 def sub_workflow_recursive(user_prompt_origin, steps_list, action_definitions, sys_prompt_sub, args, router, local_embed_model, collection, current_depth=0):
 
     if current_depth >= args.max_depth:
-        print("  [Limit] 最大深度に達したため分解を停止します。")
+        print("  [Limit] Max depth reached. Stopping decomposition.")
         return steps_list
 
     new_steps = []
     
     for step in steps_list:
         
-        # 1. Actionステップの処理
+        # 1. Process Action steps
         if step.get("step_type") == "action":
             action_content = step.get("action", "").strip()
             
-            # 定義データ(辞書リスト)を渡す
+            # Pass definition data (list of dictionaries)
             if is_decomposable(action_content, action_definitions):
-                if current_depth >= args.max_depth - 1:
-                    limited=True
-                    types=['primitive1', 'primitive2']
-                elif args.disable_db:
-                    limited=False
-                    types=['primitive1', 'primitive2']
-                else:
-                    limited=True
-                    types=['primitive1', 'primitive2', 'complex']
-                action_list_sub = load_and_format_actions(args.actions_file, limited, types)
-                user_prompt_add_sub =f"""
+                user_prompt_origin = f"""
+<CONTEXT>{load_file_content(args.user_env_file)}</CONTEXT>
 <TASK>
 Generate workflow from "{action_content}" action if possible,
  but DO NOT use "{action_content}" itself in the workflow.
 The object names and action names in the workflow must be adapted to your task.
-{action_list_sub}
 </TASK>
                 """
+
+                if current_depth >= args.max_depth - 1:
+                    action_limited=True
+                    action_types=['primitive1', 'primitive2']
+                elif args.disable_db:
+                    action_limited=False
+                    action_types=['primitive1', 'primitive2']
+                else:
+                    action_limited=True
+                    action_types=['primitive1', 'primitive2', 'complex']
                 
                 sid_to_replace = step.get("sid")
                 next_sid_to_replace = step.get("next_sid")
 
                 # 1. Generate raw sub-workflow without stitching
-                sub_workflow_data = generate_workflow(sys_prompt_sub, user_prompt_origin, user_prompt_add_sub, None, args, router, local_embed_model, collection)              
+                sub_workflow_data = generate_workflow(sys_prompt_sub, user_prompt_origin, action_limited, action_types, None, args, router, local_embed_model, collection)              
                 
                 sub_steps = normalize_workflow_steps(sub_workflow_data)
 
@@ -148,16 +148,16 @@ The object names and action names in the workflow must be adapted to your task.
 
                         new_steps.extend(generated_sub_steps)
                     else:
-                        print("  [Info] サブワークフローの再帰的分解結果が空のため、元のステップを維持します。")
+                        print("  [Info] Recursive decomposition of sub-workflow result is empty. Maintaining original step.")
                         new_steps.append(step)
                 else:
                     # sub_workflow_data was None (due to loop detection) or empty
-                    print("  [Info] サブワークフロー生成失敗(空、形式不正、または無限ループ検出)。元のステップを維持。")
+                    print("  [Info] Sub-workflow generation failed (empty, format error, or infinite loop detected). Maintaining original step.")
                     new_steps.append(step)
             else:
                 new_steps.append(step)
 
-        # 2. For Loop / Branch の処理
+        # 2. Process For Loop / Branch
         elif step.get("step_type") == "for_loop":
             if "steps" in step and isinstance(step["steps"], list):
                 step["steps"] = sub_workflow_recursive(
