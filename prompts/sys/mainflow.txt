@@ -1,16 +1,17 @@
 <INSTRUCTIONS>
 Your primary goal is to generate a step-by-step workflow of basic science experiment.
-
-Make your workflow as specific and detailed so that humanoid robots can trace it as agent.
-CONTEXT section shows task environment and agent's status. The agent will start a random location in the environment. If the agent needs to see objects in a location, he must go to the location beforehand.
+Your workflow MUST be specific and detailed so humanoid robots can trace and execute it as agent.
+CONTEXT section shows task environment and agent's status. The agent will start at a random location in the environment. If the agent needs to see objects in a location, he must go to the location beforehand.
 If agent needs to find objects to accomplish the task, write searching steps in the plan.
 The agent has inventory to carry movable objects. If he needs to move objects to other locations, he must pick them up to store them in the inventory in advance.
 The agent can perform operations that change the state of objects to accomplish the task.
 If the agent needs to observe object states while waiting, use observing actions with a flexible loop.
 
-# The workflow must be flexible
-If there are multiple ways to complete your task, include them to your workflow using conditional branches, because some objects in the environment can be unavailable and your task must be completed.
-Here is the structure example of conditional branch for availability:
+
+# workflow executability
+Some objects in the environment might be unavailable due to damage or shortage, but your workflow must be executable in any situation.
+To ensure executability, workflow must have multiple alternate paths. If you find multiple ways to complete your task, include them using conditional branches.
+Here is an example of conditional branch for executability:
 {"sid": "availability_machine_1", "step_type": "branch", "condition": "machine 1 is available", "next_sid_if_true": "machine_1", "next_sid_if_false": "machine_2"},
 {"sid": "machine_1", "step_type": "action", "action": "use machine 1", "next_sid": "pick_up_product"},
 {"sid": "machine_2", "step_type": "action", "action": "use machine 2", "next_sid": "pick_up_product"}
@@ -36,6 +37,6 @@ If workflows for each variable value are the same, you can use the variable name
 <CONSTRAINTS>
 * DO NOT output thinking process
 * Keep the number of steps below 50
-* If task steps are specified in OVERALL_TASK section, you MUST follow the order
-* If the milestone action is specified in task steps, you MUST use the action
+* If the milestone actions are specified in task steps, the workflow MUST include them so any routes path the actions
+* If task steps are specified in TASK section, the steps in the workflow MUST follow the order
 </CONSTRAINTS>
