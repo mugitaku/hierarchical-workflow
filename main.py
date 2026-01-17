@@ -6,12 +6,22 @@ from datetime import datetime
 import copy
 
 from lib.config_loader import parse_arguments, load_file_content, get_action_definitions, load_and_format_actions
-from lib.utils import find_broken_links, normalize_workflow_steps, find_duplicate_sids, verify_step_types, verify_collection_values
+from lib.utils import (
+    find_broken_links, 
+    normalize_workflow_steps, 
+    find_duplicate_sids, 
+    verify_step_types, 
+    verify_collection_values, 
+    find_unreachable_steps, 
+    wrap_workflow_with_root,
+    write_workflow_to_txt,
+    generate_diagram_for_file
+)
 from lib.llm_api import initialize_router
 from lib.db_operations import initialize_db
 from lib.workflow_logic import generate_workflow
 from lib.workflow_decomposition import sub_workflow_recursive
-from lib.workflow_refinement import refine_workflow_content, refine_workflow_format
+from lib.workflow_refinement import refine_workflow_flexibility, refine_workflow_details, refine_workflow_format
 
 def main():
     args = parse_arguments()
@@ -42,53 +52,6 @@ def main():
     sanitized_model_name = args.model.split(':')[0].split('/')[-1]
     timestamp = datetime.now().strftime("%Y%m%d%H%M")
 
-    def write_workflow_to_txt(filename, workflow_obj, workflow_title):
-        """Writes arguments and workflow to the specified file"""
-        try:
-            with open(filename, "w", encoding="utf-8") as f:
-                # Write arguments
-                f.write("Command line arguments:\n")
-                f.write("------------------------\n")
-                for arg, value in vars(args).items():
-                    f.write(f"{arg}: {value}\n")
-                
-                f.write("\n\n")
-
-                # Write workflow
-                f.write(f"{workflow_title}:\n")
-                f.write("------------------------\n")
-                if workflow_obj:
-                    f.write(json.dumps(workflow_obj, indent=2, ensure_ascii=False))
-                else:
-                    f.write("None")
-            print(f"\n✅ Saved {workflow_title} to '{filename}'.")
-        except Exception as e:
-            print(f"\n❌ An error occurred while saving {workflow_title}: {e}")
-    
-    def generate_diagram_for_file(filename, title):
-        """Generates a diagram for a given workflow file."""
-        if not args.generate_diagram:
-            return
-        
-        print(f"\n--- Generating diagram for {title} workflow ---")
-        diagram_script = "lib/diagram.py"
-        
-        if os.path.exists(diagram_script):
-            try:
-                # Execute diagram.py using the same Python interpreter
-                cmd = [sys.executable, diagram_script, filename]
-                print(f"Running: {' '.join(cmd)}")
-                
-                subprocess.run(cmd, check=True)
-                print(f"✅ Diagram generation for {title} completed.")
-                
-            except subprocess.CalledProcessError as e:
-                print(f"❌ An error occurred while executing diagram.py for {title}: {e}")
-            except Exception as e:
-                print(f"❌ An unexpected error occurred during diagram generation for {title}: {e}")
-        else:
-            print(f"❌ '{diagram_script}' not found in the current directory.")
-
     # 3. Initial Workflow Generation
     print("=== Phase 1: Initial Workflow Generation ===")
 
@@ -109,17 +72,11 @@ def main():
         print("Initial generation failed. Exiting.")
         exit(1)
 
-    initial_workflow_wrapped = {
-        "sid": "root",
-        "step_type": "for_loop",
-        "iterator": "_",
-        "collection": "singleton",
-        "steps": initial_steps
-    }
+    initial_workflow_wrapped = wrap_workflow_with_root(initial_steps)
     
     initial_filename = os.path.join(output_dir, f"{sanitized_model_name}-1-initial-{timestamp}.txt")
-    write_workflow_to_txt(initial_filename, initial_workflow_wrapped, "Initial Workflow")
-    generate_diagram_for_file(initial_filename, "Initial")
+    write_workflow_to_txt(initial_filename, initial_workflow_wrapped, "Initial Workflow", args)
+    generate_diagram_for_file(initial_filename, "Initial", args)
     
     if args.disable_subflow:
         final_steps = initial_steps
@@ -134,35 +91,37 @@ def main():
         pre_refined_final_steps = sub_workflow_recursive(user_prompt_env, copy.deepcopy(initial_steps), action_definitions, sys_prompt_sub, args, router, local_embed_model, collection)
         final_steps = pre_refined_final_steps
 
-    pre_refined_workflow = {
-        "sid": "root",
-        "step_type": "for_loop",
-        "iterator": "_",
-        "collection": "singleton",
-        "steps": pre_refined_final_steps
-    }
+    pre_refined_workflow = wrap_workflow_with_root(pre_refined_final_steps)
 
     pre_refine_filename = os.path.join(output_dir, f"{sanitized_model_name}-2-pre-refine-{timestamp}.txt")
-    write_workflow_to_txt(pre_refine_filename, pre_refined_workflow, "Pre-Refined Final Workflow")
-    generate_diagram_for_file(pre_refine_filename, "Pre-Refined")
+    write_workflow_to_txt(pre_refine_filename, pre_refined_workflow, "Pre-Refined Final Workflow", args)
+    generate_diagram_for_file(pre_refine_filename, "Pre-Refined", args)
 
-    final_steps = refine_workflow_content(final_steps, user_prompt_origin, format_content, args, router)
+    final_steps = refine_workflow_flexibility(final_steps, user_prompt_origin, format_content, args, router)
+
+    # Generate diagram after flexibility refinement
+    post_flex_workflow = wrap_workflow_with_root(final_steps)
+    post_flex_filename = os.path.join(output_dir, f"{sanitized_model_name}-3-post-flex-{timestamp}.txt")
+    write_workflow_to_txt(post_flex_filename, post_flex_workflow, "Post-Flexibility-Refined Workflow", args)
+    generate_diagram_for_file(post_flex_filename, "Post-Flexibility-Refined", args)
+
+    final_steps = refine_workflow_details(final_steps, user_prompt_origin, format_content, args, router)
     
+    # Generate diagram after details refinement
+    post_details_workflow = wrap_workflow_with_root(final_steps)
+    post_details_filename = os.path.join(output_dir, f"{sanitized_model_name}-4-post-details-{timestamp}.txt")
+    write_workflow_to_txt(post_details_filename, post_details_workflow, "Post-Details-Refined Workflow", args)
+    generate_diagram_for_file(post_details_filename, "Post-Details-Refined", args)
+
     # Format refinement is now called without passing broken_links
     final_steps = refine_workflow_format(final_steps, user_prompt_origin, action_limited, action_types, format_content, args, router)
 
     # Wrap the final workflow in a root object
-    final_workflow = {
-        "sid": "root",
-        "step_type": "for_loop",
-        "iterator": "_",
-        "collection": "singleton",
-        "steps": final_steps
-    }
+    final_workflow = wrap_workflow_with_root(final_steps)
 
-    final_filename = os.path.join(output_dir, f"{sanitized_model_name}-3-final-{timestamp}.txt")
-    write_workflow_to_txt(final_filename, final_workflow, "Final Workflow")
-    generate_diagram_for_file(final_filename, "Final")
+    final_filename = os.path.join(output_dir, f"{sanitized_model_name}-5-final-{timestamp}.txt")
+    write_workflow_to_txt(final_filename, final_workflow, "Final Workflow", args)
+    generate_diagram_for_file(final_filename, "Final", args)
 
 
     # --- Final Validation ---
@@ -172,6 +131,7 @@ def main():
     final_steps = final_workflow.get("steps", [])
     broken_links = find_broken_links(final_steps)
     duplicate_sids = find_duplicate_sids(final_steps)
+    unreachable_sids = find_unreachable_steps(final_steps)
 
     if broken_links:
         print("❌ Found broken links in the final workflow:")
@@ -186,6 +146,13 @@ def main():
             print(f"  - SID '{sid}' is duplicated.")
     else:
         print("✅ Final workflow validation successful. No duplicate SIDs found.")
+
+    if unreachable_sids:
+        print(f"❌ Found {len(unreachable_sids)} unreachable SIDs in the final workflow:")
+        for sid in unreachable_sids:
+            print(f"  - SID '{sid}' is unreachable.")
+    else:
+        print("✅ Final workflow validation successful. No unreachable SIDs found.")
 
     invalid_step_types = verify_step_types(final_steps)
     if invalid_step_types:
@@ -212,3 +179,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
