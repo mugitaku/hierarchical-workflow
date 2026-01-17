@@ -1,6 +1,9 @@
 import re
 import json
 import html
+import os
+import sys
+import subprocess
 
 def extract_json(text):
     """Extracts the JSON part from a string, such as a Markdown code block (enhanced version, v4)"""
@@ -124,49 +127,127 @@ def find_broken_links(steps):
     """
     Detects steps in a workflow where 'next_sid', 'next_sid_if_true',
     or 'next_sid_if_false' does not correspond to an existing 'sid'.
+    This version is enhanced to recursively check nested structures.
+    A "broken link" is an outgoing reference to a non-existent step ID.
+    This is distinct from an "unreachable step," which has no incoming links.
     """
     all_sids = get_all_sids(steps)
-    # "end" is a valid terminal state.
+    # "" and "end" are considered valid terminal SIDs.
     all_sids.add("end")
+    all_sids.add("")
+    
     broken_links = []
 
-    def check_step_links_recursive(step_list):
+    def check_step_links_recursive(step_list, all_sids_in_scope):
         if not isinstance(step_list, list):
             return
+            
         for step in step_list:
             current_sid = step.get('sid', 'N/A')
 
-            # Check next_sid for action and other step types. Empty is OK.
-            if 'next_sid' in step and step['next_sid'] and step['next_sid'] not in all_sids:
-                broken_links.append({
-                    "from_sid": current_sid,
-                    "to_sid": step['next_sid'],
-                    "link_type": "next_sid"
-                })
-
-            # Check branch-specific sids. Empty is NOT OK.
-            if step.get('step_type') == 'branch':
-                if not step.get('next_sid_if_true') or step.get('next_sid_if_true') not in all_sids:
+            # Check 'next_sid'
+            if 'next_sid' in step:
+                next_sid = step.get('next_sid')
+                if next_sid not in all_sids_in_scope:
                     broken_links.append({
                         "from_sid": current_sid,
-                        "to_sid": step.get('next_sid_if_true', 'MISSING'),
+                        "to_sid": next_sid,
+                        "link_type": "next_sid"
+                    })
+
+            # Check branch-specific sids
+            if step.get('step_type') == 'branch':
+                true_sid = step.get('next_sid_if_true')
+                if not true_sid or true_sid not in all_sids_in_scope:
+                    broken_links.append({
+                        "from_sid": current_sid,
+                        "to_sid": true_sid or 'MISSING',
                         "link_type": "next_sid_if_true"
                     })
-                if not step.get('next_sid_if_false') or step.get('next_sid_if_false') not in all_sids:
+                
+                false_sid = step.get('next_sid_if_false')
+                if not false_sid or false_sid not in all_sids_in_scope:
                     broken_links.append({
                         "from_sid": current_sid,
-                        "to_sid": step.get('next_sid_if_false', 'MISSING'),
+                        "to_sid": false_sid or 'MISSING',
                         "link_type": "next_sid_if_false"
                     })
             
-            # Recurse into for_loops
+            # Recurse into for_loops, passing the correct set of all SIDs
             if step.get('step_type') == 'for_loop' and 'steps' in step:
-                check_step_links_recursive(step['steps'])
+                check_step_links_recursive(step['steps'], all_sids)
 
-    check_step_links_recursive(steps)
+    check_step_links_recursive(steps, all_sids)
+    
     if broken_links:
         print(f"  [Info] Found {len(broken_links)} broken links.")
     return broken_links
+
+def find_unreachable_steps(steps):
+    """
+    Finds all unreachable steps in a workflow by performing a graph traversal.
+    This version uses a breadth-first search (BFS) for robustness.
+    It assumes the first step in the main list (`steps[0]`) is the entry point.
+    """
+    if not steps or not isinstance(steps, list):
+        return []
+
+    all_sids = get_all_sids(steps)
+    if not all_sids:
+        return []
+
+    sid_to_step_map = {}
+    def build_sid_map(step_list):
+        if not isinstance(step_list, list): return
+        for step in step_list:
+            if 'sid' in step:
+                sid_to_step_map[step['sid']] = step
+            if step.get('step_type') == 'for_loop' and 'steps' in step:
+                build_sid_map(step['steps'])
+    build_sid_map(steps)
+
+    reachable_sids = set()
+    queue = []
+    
+    # Start traversal from the first step in the main list, which is the entry point.
+    if steps and 'sid' in steps[0]:
+        start_sid = steps[0]['sid']
+        queue.append(start_sid)
+
+    while queue:
+        current_sid = queue.pop(0)
+
+        if not current_sid or current_sid in reachable_sids:
+            continue
+        
+        reachable_sids.add(current_sid)
+        
+        step = sid_to_step_map.get(current_sid)
+        if not step:
+            continue
+
+        next_sids_to_visit = []
+        if 'next_sid' in step and step['next_sid']:
+            next_sids_to_visit.append(step['next_sid'])
+        if 'next_sid_if_true' in step and step['next_sid_if_true']:
+            next_sids_to_visit.append(step['next_sid_if_true'])
+        if 'next_sid_if_false' in step and step['next_sid_if_false']:
+            next_sids_to_visit.append(step['next_sid_if_false'])
+        
+        if step.get('step_type') == 'for_loop' and 'steps' in step and step.get('steps'):
+            first_step_in_loop = step['steps'][0]
+            if 'sid' in first_step_in_loop:
+                next_sids_to_visit.append(first_step_in_loop['sid'])
+
+        for next_sid in next_sids_to_visit:
+            if next_sid not in reachable_sids:
+                queue.append(next_sid)
+
+    unreachable = all_sids - reachable_sids
+    if unreachable:
+        print(f"  [Info] Found {len(unreachable)} unreachable SIDs: {', '.join(sorted(list(unreachable)))}")
+        
+    return list(unreachable)
 
 def verify_step_types(steps):
     """
@@ -198,7 +279,7 @@ def verify_collection_values(steps):
     """
     Verifies that all for_loop steps in the workflow have a valid `collection` value.
     """
-    allowed_collections = {"singleton", "all_locations", "all_closed_containers", "all_opened_containers"}
+    allowed_collections = {"all_locations", "all_closed_containers", "all_opened_containers"}
     invalid_steps = []
 
     def check_collection_values_recursive(step_list):
@@ -245,3 +326,60 @@ def normalize_workflow_steps(data):
                 return value
     print(f"  [Warning] Could not extract steps from: {str(data)[:100]}...")
     return []
+
+def wrap_workflow_with_root(steps):
+    """Wraps a list of steps in the standard root for_loop structure."""
+    return {
+        "sid": "root",
+        "step_type": "for_loop",
+        "iterator": "_",
+        "collection": "singleton",
+        "steps": steps
+    }
+
+def write_workflow_to_txt(filename, workflow_obj, workflow_title, args):
+    """Writes arguments and workflow to the specified file"""
+    try:
+        with open(filename, "w", encoding="utf-8") as f:
+            # Write arguments
+            f.write("Command line arguments:\n")
+            f.write("------------------------\n")
+            for arg, value in vars(args).items():
+                f.write(f"{arg}: {value}\n")
+            
+            f.write("\n\n")
+
+            # Write workflow
+            f.write(f"{workflow_title}:\n")
+            f.write("------------------------\n")
+            if workflow_obj:
+                f.write(json.dumps(workflow_obj, indent=2, ensure_ascii=False))
+            else:
+                f.write("None")
+        print(f"\n✅ Saved {workflow_title} to '{filename}'.")
+    except Exception as e:
+        print(f"\n❌ An error occurred while saving {workflow_title}: {e}")
+
+def generate_diagram_for_file(filename, title, args):
+    """Generates a diagram for a given workflow file."""
+    if not args.generate_diagram:
+        return
+    
+    print(f"\n--- Generating diagram for {title} workflow ---")
+    diagram_script = "lib/diagram.py"
+    
+    if os.path.exists(diagram_script):
+        try:
+            # Execute diagram.py using the same Python interpreter
+            cmd = [sys.executable, diagram_script, filename]
+            print(f"Running: {' '.join(cmd)}")
+            
+            subprocess.run(cmd, check=True)
+            print(f"✅ Diagram generation for {title} completed.")
+            
+        except subprocess.CalledProcessError as e:
+            print(f"❌ An error occurred while executing diagram.py for {title}: {e}")
+        except Exception as e:
+            print(f"❌ An unexpected error occurred during diagram generation for {title}: {e}")
+    else:
+        print(f"❌ '{diagram_script}' not found in the current directory.")
