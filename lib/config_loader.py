@@ -7,8 +7,8 @@ def parse_arguments():
     parser.add_argument("--model", type=str, help="Specify the model_name in litellm.yaml")
     parser.add_argument("--user_env_file", type=str, help="Text file describing the agent's environment")
     parser.add_argument("--user_task_file", type=str, help="Text file describing the agent's task")
-    parser.add_argument("--sys_main_file", type=str, default="prompts/sys/main.txt", help="System Prompt for main workflow")
-    parser.add_argument("--sys_sub_file", type=str, default="prompts/sys/sub.txt", help="System Prompt for sub workflow")
+    parser.add_argument("--sys_main_file", type=str, default="prompts/sys/mainflow.txt", help="System Prompt for main workflow")
+    parser.add_argument("--sys_sub_file", type=str, default="prompts/sys/subflow.txt", help="System Prompt for sub workflow")
     parser.add_argument("--format_file", type=str, default="prompts/sys/format.txt", help="System Prompt for format")
     parser.add_argument("--example_file", type=str, default="prompts/sys/example.txt", help="System Prompt for few shot example")
     parser.add_argument("--actions_file", type=str, default="prompts/known_actions-simple.json", help="Action definition file path")
@@ -37,7 +37,7 @@ def load_and_format_actions(filepath, action_limited=False, action_types=None):
         if action_types:
             actions_data = [item for item in actions_data if item.get('type') in action_types]
 
-        header = "You can use only the following actions:\n" if action_limited else "You can use the following and other actions:\n"
+        header = "You can use only the following actions:\n" if action_limited else "You can use the following and other arbitrary actions:\n"
         actions_str = "".join([f"* {item['example']}: {item['description']}\n" for item in actions_data])
         return header + actions_str
     except Exception as e:
