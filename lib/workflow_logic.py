@@ -25,7 +25,7 @@ def generate_workflow(sys_prompt, user_prompt_origin, action_limited, action_typ
         (e.g. "machine" is abstracted to "object", "cup" is abstracted to "container", "stove" is abstracted to "heater", etc)
     * Subtasks MUST be separated by commas
     * Subtasks MUST be 15 words or less
-    * The number of subtasks MUST be between 40 and 50
+    * The number of subtasks MUST be between 20 and 30
     * DO NOT use numbering or newlines
     * DO NOT output thinking process
     * DO NOT output duplicate subtasks
@@ -69,8 +69,11 @@ def generate_workflow(sys_prompt, user_prompt_origin, action_limited, action_typ
         user_prompt = f"""
 {user_prompt_origin}
 <INSTRUCTIONS>
-Refer to the following subtask candidates and the steps of workflow candidates to make specific and detailed workflow.
-Adapt the object names and variable names to your task.
+Refer to the following subtask candidates and the steps of workflow candidates.
+The object names are generalized, so adapt them to your task to make a specific and executable workflow.
+
+If there are multiple objects in your environment that correspond to the generalized object name, 
+include each path using those objects in your workflow to ensure executability.
 
 subtask candidates: {subtasks}
 
@@ -85,7 +88,12 @@ workflow candidates:
         user_prompt = f"""
 {user_prompt_origin}
 <INSTRUCTIONS>
-Refer to the following subtask candidates to make specific and detailed workflow.
+Refer to the following subtask candidates.
+The object names are generalized, so adapt them to your task to make a specific and executable workflow.
+
+If there are multiple objects in your environment that correspond to the generalized object name, 
+include each path using those objects in your workflow to ensure executability.
+
 subtask candidates: {subtasks}
 
 {load_and_format_actions(args.actions_file, action_limited, action_types)}
@@ -102,8 +110,8 @@ subtask candidates: {subtasks}
             temperature=args.temperature,
             router=router
         )
-        print("■sys_prompt:", sys_prompt)
-        print("■user_prompt:", user_prompt)
+        #print("■sys_prompt:", sys_prompt)
+        #print("■user_prompt:", user_prompt)
         
         response_content = response['choices'][0]['message']['content']
         print("■response_content:", response_content)
@@ -115,7 +123,6 @@ subtask candidates: {subtasks}
         steps = normalize_workflow_steps(data)
         
         # Perform initial format refinement
-        print("\n--- Initial Format Refinement ---")
         refined_steps = refine_workflow_format(steps, user_prompt_origin, action_limited, action_types, format_content, args, router)
         
         return refined_steps
