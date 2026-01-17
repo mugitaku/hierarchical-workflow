@@ -7,9 +7,11 @@ The agent has inventory to carry movable objects. If he needs to move objects to
 The agent can perform operations that change the state of objects to accomplish the task.
 If the agent needs to observe object states while waiting, use observing actions with a flexible loop.
 
-# The workflow must be flexible
-If there are multiple ways to complete your task, include them to your workflow using conditional branches, because some objects in the environment can be unavailable and your task must be completed.
-Here is the structure example of conditional branch for availability:
+
+# workflow executability
+Some objects in the environment might be unavailable due to damage or shortage, but your workflow must be executable in any situation.
+To ensure executability, workflow must have multiple alternate paths. If you find multiple ways to complete your task, include them using conditional branches.
+Here is an example of conditional branch for executability:
 {"sid": "availability_machine_1", "step_type": "branch", "condition": "machine 1 is available", "next_sid_if_true": "machine_1", "next_sid_if_false": "machine_2"},
 {"sid": "machine_1", "step_type": "action", "action": "use machine 1", "next_sid": "pick_up_product"},
 {"sid": "machine_2", "step_type": "action", "action": "use machine 2", "next_sid": "pick_up_product"}
