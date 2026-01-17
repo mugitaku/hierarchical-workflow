@@ -1,7 +1,7 @@
 <OUTPUT_FORMAT>
-Output format of workflow:
-Use JSON format.
-Each node in the plan should be represented as a dictionary entry in the "steps" array.
+Strictly follow the output format of workflow:
+* Use JSON format.
+* Each node in the plan should be represented as a dictionary entry in the "steps" array.
 
 # Specification
 * Common elements for all steps:
@@ -9,8 +9,8 @@ Each node in the plan should be represented as a dictionary entry in the "steps"
     * Unique ID to identify the step
   * step_type[str]
     * The type of the step. One of: "action", "branch", "for_loop", "break"
-  * comment[str] (optional)
-    * Element for writing comments
+  * comment[str]
+    * Element for writing comments of the step
 * Action step [dict]
   * Step that describes an action to execute
   * step_type="action"
