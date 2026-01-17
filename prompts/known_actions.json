@@ -56,7 +56,7 @@
   {
     "action": "focus on",
     "example": "focus on <obj>",
-    "description": "focus on the object. This is the milestone action. This is available only in the case the task directs and the object is visible.",
+    "description": "focus on the object. This is the milestone action. This is available only when the task directs, the object is visible, and the agent is at the same place as the object.",
     "type": "milestone"
   },
   {
@@ -69,7 +69,7 @@
     "action": "look at",
     "example": "look at <obj>",
     "description": "look at the state of the object",
-    "type": "primitive2"
+    "type": "primitive1"
   },
   {
     "action": "mix",
@@ -80,7 +80,7 @@
   {
     "action": "move",
     "example": "move <obj1> to <obj2>",
-    "description": "move <obj1> into/onto <obj2>.",
+    "description": "move <obj1> into/onto <obj2>. obj cannot be a location",
     "type": "primitive2"
   },
   {
@@ -98,7 +98,7 @@
   {
     "action": "pour",
     "example": "pour <obj1> into <obj2>",
-    "description": "pour <obj1> into <obj2>.",
+    "description": "pour <obj1> into <obj2>",
     "type": "primitive2"
   },
   {
@@ -111,7 +111,7 @@
     "action": "use",
     "example": "use <obj1> on <obj2>",
     "description": "Execute the function of <obj1> targeting <obj2>.",
-    "type": "primitive2"
+    "type": "complex"
   },
   {
     "action": "wait1",
