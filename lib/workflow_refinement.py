@@ -1,6 +1,6 @@
 import json
 from lib.llm_api import completion_with_backoff
-from lib.utils import extract_json, normalize_workflow_steps, find_duplicate_sids, find_broken_links, find_unreachable_steps, verify_step_types, verify_collection_values
+from lib.utils import extract_json, normalize_workflow_steps, find_duplicate_sids, find_broken_links, find_unreachable_steps, verify_step_types, verify_collection_values, detect_missing_keys
 from lib.config_loader import load_and_format_actions, get_action_definitions
 
 def verify_actions(steps, allowed_actions):
@@ -140,6 +140,7 @@ def refine_workflow_format(steps, user_prompt_origin, action_limited, action_typ
         unreachable_sids = find_unreachable_steps(steps_to_validate)
         invalid_step_types = verify_step_types(steps_to_validate)
         invalid_collections = verify_collection_values(steps_to_validate)
+        missing_keys = detect_missing_keys(steps_to_validate)
         
         action_definitions = get_action_definitions(args.actions_file)
         invalid_actions = verify_actions(steps_to_validate, action_definitions)
@@ -150,7 +151,8 @@ def refine_workflow_format(steps, user_prompt_origin, action_limited, action_typ
             "unreachable_sids": unreachable_sids,
             "invalid_step_types": invalid_step_types,
             "invalid_collections": invalid_collections,
-            "invalid_actions": invalid_actions
+            "invalid_actions": invalid_actions,
+            "missing_keys": missing_keys
         }
         has_errors = any(bool(v) for v in errors.values())
         return errors, has_errors
@@ -186,13 +188,18 @@ def refine_workflow_format(steps, user_prompt_origin, action_limited, action_typ
         )
     if initial_errors["invalid_collections"]:
         error_instructions.append(
-            f"* The following for_loop steps have invalid `collection` values. You MUST fix them (allowed values are: singleton, all_locations, all_closed_containers, all_opened_containers):\n" +
+            f"* The following for_loop steps have invalid `collection` values. You MUST fix them (allowed values are: all_locations, all_closed_containers, all_opened_containers):\n" +
             "\n".join([f"  - sid: {s['sid']}, invalid_collection: '{s['collection']}'" for s in initial_errors['invalid_collections']])
         )
     if initial_errors["invalid_actions"]:
         error_instructions.append(
             f"* The following steps have invalid actions. You MUST fix them to use actions from the allowed list:\n" +
             "\n".join([f"  - sid: {s['sid']}, invalid_action: '{s['action']}'" for s in initial_errors['invalid_actions']])
+        )
+    if initial_errors["missing_keys"]:
+        error_instructions.append(
+            f"* The following steps are missing required keys for their `step_type`. You MUST add the missing keys:\n" +
+            "\n".join([f"  - sid: {s['sid']}, step_type: {s['step_type']}, missing_keys: {s['missing_keys']}" for s in initial_errors['missing_keys']])
         )
 
     error_prompt_section = "\n".join(error_instructions)
@@ -215,7 +222,7 @@ When fixing the workflow, ensure it still achieves the original goal described i
 {intermediate_json_str}
 </WORKFLOW>
 """
-    print("■response_content:", refine_prompt)
+    print("■refine_prompt:", refine_prompt)
 
     try:
         response = completion_with_backoff(
