@@ -111,7 +111,7 @@ subtask candidates: {subtasks}
             router=router
         )
         #print("■sys_prompt:", sys_prompt)
-        #print("■user_prompt:", user_prompt)
+        print("■user_prompt:", user_prompt)
         
         response_content = response['choices'][0]['message']['content']
         print("■response_content:", response_content)
