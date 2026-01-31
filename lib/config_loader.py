@@ -37,7 +37,7 @@ def load_and_format_actions(filepath, action_limited=False, action_types=None):
         if action_types:
             actions_data = [item for item in actions_data if item.get('type') in action_types]
 
-        header = "You can use only the following actions:\n" if action_limited else "You can use the following and other arbitrary actions:\n"
+        header = "You can use only the following actions in action steps:\n" if action_limited else "You can use the following and other arbitrary actions in action steps:\n"
         actions_str = "".join([f"* {item['example']}: {item['description']}\n" for item in actions_data])
         return header + actions_str
     except Exception as e:
