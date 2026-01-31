@@ -15,7 +15,8 @@ from lib.utils import (
     find_unreachable_steps, 
     wrap_workflow_with_root,
     write_workflow_to_txt,
-    generate_diagram_for_file
+    generate_diagram_for_file,
+    check_after_llm
 )
 from lib.llm_api import initialize_router
 from lib.db_operations import initialize_db
@@ -116,6 +117,9 @@ def main():
     # Format refinement is now called without passing broken_links
     final_steps = refine_workflow_format(final_steps, user_prompt_origin, action_limited, action_types, format_content, args, router)
 
+    # --- Final Validation ---
+    check_after_llm(final_steps)
+
     # Wrap the final workflow in a root object
     final_workflow = wrap_workflow_with_root(final_steps)
 
@@ -123,53 +127,6 @@ def main():
     write_workflow_to_txt(final_filename, final_workflow, "Final Workflow", args)
     generate_diagram_for_file(final_filename, "Final", args)
 
-
-    # --- Final Validation ---
-    print("\n" + "="*30)
-    print("VALIDATING FINAL WORKFLOW")
-    print("="*30)
-    final_steps = final_workflow.get("steps", [])
-    broken_links = find_broken_links(final_steps)
-    duplicate_sids = find_duplicate_sids(final_steps)
-    unreachable_sids = find_unreachable_steps(final_steps)
-
-    if broken_links:
-        print("❌ Found broken links in the final workflow:")
-        for link in broken_links:
-            print(f"  - From SID '{link['from_sid']}' to non-existent SID '{link['to_sid']}' (link type: {link['link_type']})")
-    else:
-        print("✅ Final workflow validation successful. No broken links found.")
-
-    if duplicate_sids:
-        print(f"❌ Found {len(duplicate_sids)} duplicate SIDs in the final workflow:")
-        for sid in duplicate_sids:
-            print(f"  - SID '{sid}' is duplicated.")
-    else:
-        print("✅ Final workflow validation successful. No duplicate SIDs found.")
-
-    if unreachable_sids:
-        print(f"❌ Found {len(unreachable_sids)} unreachable SIDs in the final workflow:")
-        for sid in unreachable_sids:
-            print(f"  - SID '{sid}' is unreachable.")
-    else:
-        print("✅ Final workflow validation successful. No unreachable SIDs found.")
-
-    invalid_step_types = verify_step_types(final_steps)
-    if invalid_step_types:
-        print(f"❌ Found {len(invalid_step_types)} steps with invalid step_types in the final workflow:")
-        for step in invalid_step_types:
-            print(f"  - SID '{step['sid']}' has an invalid step_type: '{step['step_type']}'")
-    else:
-        print("✅ Final workflow validation successful. No invalid step_types found.")
-
-    invalid_collections = verify_collection_values(final_steps)
-    if invalid_collections:
-        print(f"❌ Found {len(invalid_collections)} for_loop steps with invalid collection values in the final workflow:")
-        for step in invalid_collections:
-            print(f"  - SID '{step['sid']}' has an invalid collection value: '{step['collection']}'")
-    else:
-        print("✅ Final workflow validation successful. No invalid collection values found.")
-    
     # --- Output Results ---
     print("\n" + "="*30)
     print("FINAL WORKFLOW JSON")
