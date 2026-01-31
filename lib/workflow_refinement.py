@@ -49,6 +49,10 @@ Here is an example of conditional branch for executability:
 * If the milestone actions are specified in task steps, the workflow MUST include them so any routes path the actions
 </INSTRUCTIONS>
 
+<CONSTRAINTS>
+{action_list_refine_content}
+</CONSTRAINTS>
+
 {user_prompt_origin}
 {format_content}
 
@@ -86,18 +90,21 @@ def refine_workflow_details(steps, user_prompt_origin, format_content, args, rou
 
     refine_prompt = f"""
 <INSTRUCTIONS>
-Your primary goal is to make the workflow shown in WORKFLOW section to be executable.
+Your primary goal is to make the workflow shown in WORKFLOW section to be executable, keeping the overall structure intact.
 The workflow is to complete the task shown in TASK section
 
 Follow these instructions:
-* Do not simplify the workflow
 * Adapt the object names in the steps to your environment written in CONTEXT section
 * If the agent needs to see objects at a location, he must go to the location beforehand
-* {action_list_refine_content}
 * If task steps are specified in TASK section, the steps in the workflow MUST follow the order.
     If the workflow has task steps out of order, fix them.
 * An action step can contain only one action. If an action step contains multiple actions, split it into multiple steps
 </INSTRUCTIONS>
+
+<CONSTRAINTS>
+* Do not remove conditional branches from the workflow
+* {action_list_refine_content}
+</CONSTRAINTS>
 
 {user_prompt_origin}
 {format_content}
