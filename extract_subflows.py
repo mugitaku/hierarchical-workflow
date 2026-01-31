@@ -1,7 +1,9 @@
 import json
 import argparse
 import sys
+import os
 from lib.llm_api import initialize_router, completion_with_backoff
+from lib.db_operations import initialize_db, get_all_subflows, register_subflow_in_db
 from lib.utils import (
     extract_json,
     find_duplicate_sids,
@@ -9,156 +11,28 @@ from lib.utils import (
     find_unreachable_steps,
     verify_step_types,
     verify_collection_values,
-    detect_missing_keys
+    detect_missing_keys,
+    check_after_llm
 )
 
 def extract_subflows_llm(workflow_steps, args, router):
     """
-    Uses an LLM to extract sub-workflows from a workflow.
+    Uses an LLM to extract sub-workflows from a workflow in two steps.
     """
-    example_input_workflow = [
-        {
-            "sid": "move_container_to_sink",
-            "step_type": "action",
-            "action": "move ${container} to sink",
-            "next_sid": "activate_sink"
-        },
-        {
-            "sid": "activate_sink",
-            "step_type": "action",
-            "action": "activate sink",
-            "next_sid": "fill_container_with_water"
-        },
-        {
-            "sid": "fill_container_with_water",
-            "step_type": "subflow",
-            "subflow_id": "fill_container_with_water",
-            "next_sid": "deactivate_sink"
-        },
-        {
-            "sid": "deactivate_sink",
-            "step_type": "action",
-            "action": "deactivate sink",
-            "next_sid": "pick_up_container"
-        },
-        {
-            "sid": "pick_up_container",
-            "step_type": "action",
-            "action": "pick up ${container}",
-            "next_sid": "pour_container_into_flower_pot"
-        },
-        {
-            "sid": "pour_container_into_flower_pot",
-            "step_type": "action",
-            "action": "pour ${container} into flower pot",
-            "next_sid": "wait"
-        },
-        {
-            "sid": "wait",
-            "step_type": "action",
-            "action": "wait",
-            "next_sid": "look_at_flower_pot"
-        },
-        {
-            "sid": "look_at_flower_pot",
-            "step_type": "action",
-            "action": "look at flower pot",
-            "next_sid": ""
-        }
-    ]
-
-    example_output = [
-        {
-            "name": "water plant in flower pot from container",
-            "steps": [
-                {
-                    "sid": "fill_container_with_water",
-                    "step_type": "action",
-                    "action": "fill ${container} with water",
-                    "next_sid": "pour_container_into_flower_pot"
-                },
-                {
-                    "sid": "pour_container_into_flower_pot",
-                    "step_type": "action",
-                    "action": "pour ${container} into flower pot",
-                    "next_sid": "wait"
-                },
-                {
-                    "sid": "wait",
-                    "step_type": "action",
-                    "action": "wait",
-                    "next_sid": "look_at_flower_pot"
-                },
-                {
-                    "sid": "look_at_flower_pot",
-                    "step_type": "action",
-                    "action": "look at flower pot",
-                    "next_sid": ""
-                }
-            ]
-        },
-        {
-            "name": "fill container with water from sink",
-            "steps": [
-                {
-                    "sid": "move_container_to_sink",
-                    "step_type": "action",
-                    "action": "move ${container} to sink",
-                    "next_sid": "activate_sink"
-                },
-                {
-                    "sid": "activate_sink",
-                    "step_type": "action",
-                    "action": "activate sink",
-                    "next_sid": "wait"
-                },
-                {
-                    "sid": "wait",
-                    "step_type": "action",
-                    "action": "wait",
-                    "next_sid": "deactivate_sink"
-                },
-                {
-                    "sid": "deactivate_sink",
-                    "step_type": "action",
-                    "action": "deactivate sink",
-                    "next_sid": "pick_up_container"
-                },
-                {
-                    "sid": "pick_up_container",
-                    "step_type": "action",
-                    "action": "pick up ${container}",
-                    "next_sid": "pour_container_into_flower_pot"
-                }
-            ]
-        }
-    ]
-
-    # Create a detailed prompt for the LLM
-    prompt = f"""<INSTRUCTIONS>
-Your task is to make reusable, general sub-workflows from the original workflow shown in INPUT_WORKFLOW section. 
+    # --- Step 1: Decompose and Name ---
+    
+    # Create a detailed prompt for the first request
+    prompt1 = f"""<INSTRUCTIONS>
+Your primary task is to extract reusable sub-workflows from the original workflow shown in INPUT_WORKFLOW section. 
 A "sub-workflow" is a self-contained sequence of steps that achieves a specific part of the overall goal.
-The original workflow should be reconstructible by combining these sub-workflows.
 
 Follow these steps:
-1. decompose the workflow into reusable sub-workflows
-2. abstract all the object names of your sub-workflows
-3. add a specific and detailed name for each sub-workflow that describes what and how the sub-workflow does. The name MUST be 15 words or less.
+1. extract reusable sub-workflows from the original workflow
+2. add a unique "name" key for each sub-workflow whose value describes its purpose as specific as possible. 
+    * Each name MUST be between 4 and 15 words.
+    * The base form of a verb must be used at the beginning of the name.
+    * The base form of verb can only be used once in each name.
 </INSTRUCTIONS>
-
-<FEW_SHOT_EXAMPLE>
-Here is an example of a input workflow and the desired output.
-
-**Input Workflow:**
-```json
-{json.dumps(example_input_workflow, indent=2)}
-```
-
-**Desired Output:**
-```json
-{json.dumps(example_output, indent=2)}
-```
-</FEW_SHOT_EXAMPLE>
 
 <INPUT_WORKFLOW>
 ```json
@@ -167,39 +41,84 @@ Here is an example of a input workflow and the desired output.
 </INPUT_WORKFLOW>
 
 <OUTPUT_FORMAT>
-Your output MUST be a valid JSON list of objects, where each object has a "name" and a "steps" list.
-Do not include any other text or explanations outside of the JSON output.
+* Do not include any other text or explanations outside of the JSON output.
+* Each sub-workflow has "name" and "steps" keys.
 </OUTPUT_FORMAT>
 """
 
     try:
-        response = completion_with_backoff(
+        response1 = completion_with_backoff(
             model=args.model,
-            messages=[{"role": "user", "content": prompt}],
-            temperature=args.temperature,
+            messages=[{"role": "user", "content": prompt1}],
+            temperature=0.0,
             router=router
         )
         
-        response_content = response['choices'][0]['message']['content']
+        response_content1 = response1['choices'][0]['message']['content']
+        print("■response_content1:", response_content1)
         
         # Extract the JSON part of the response
-        sub_workflows_json = extract_json(response_content)
+        sub_workflows_named_json = extract_json(response_content1)
         
-        if sub_workflows_json and isinstance(sub_workflows_json, list):
-            return sub_workflows_json
-        else:
-            print("Error: LLM did not return a valid list of sub-workflows.", file=sys.stderr)
+        if not (sub_workflows_named_json and isinstance(sub_workflows_named_json, list)):
+            print("Error: LLM did not return a valid list of sub-workflows in step 1.", file=sys.stderr)
             return None
 
     except Exception as e:
-        print(f"An error occurred during LLM-based sub-workflow extraction: {e}", file=sys.stderr)
+        print(f"An error occurred during step 1 (Decompose and Name): {e}", file=sys.stderr)
+        return None
+
+    # --- Step 2: Abstract ---
+
+    # Create a detailed prompt for the second request
+    prompt2 = f"""<INSTRUCTIONS>
+Your primary task is to abstract all the object names in the value of "name", "sid", "next_sid", "next_sid_if_true", "next_sid_if_false", "action" keys.
+For example, you can abstract the object names to "object", "container", "heater", "refrigeration appliance", "room", etc
+</INSTRUCTIONS>
+
+<INPUT_WORKFLOWS>
+```json
+{json.dumps(sub_workflows_named_json, indent=2)}
+```
+</INPUT_WORKFLOWS>
+
+<CONSTRAINTS>
+* Keep the structure of the workflow intact
+* DO NOT output thinking process
+* The base form of a verb must be used at the beginning of the value of each name key
+</CONSTRAINTS>
+
+
+"""
+    try:
+        response2 = completion_with_backoff(
+            model=args.model,
+            messages=[{"role": "user", "content": prompt2}],
+            temperature=0.0,
+            router=router
+        )
+        
+        response_content2 = response2['choices'][0]['message']['content']
+        print("■response_content2:", response_content2)
+        
+        # Extract the JSON part of the response
+        sub_workflows_abstracted_json = extract_json(response_content2)
+        
+        if sub_workflows_abstracted_json and isinstance(sub_workflows_abstracted_json, list):
+            return sub_workflows_abstracted_json
+        else:
+            print("Error: LLM did not return a valid list of sub-workflows in step 2.", file=sys.stderr)
+            return None
+
+    except Exception as e:
+        print(f"An error occurred during step 2 (Abstract): {e}", file=sys.stderr)
         return None
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Extract sub-workflows from a workflow JSON file using an LLM.')
     parser.add_argument('--file_path', help='Path to the workflow JSON file.')
     parser.add_argument('--model', type=str, default='openrouter/google/gemma-3-27b-it:free', help='The model to use for extraction.')
-    parser.add_argument('--temperature', type=float, default=0.0, help='The temperature for the LLM.')
+    parser.add_argument("--actions_file", type=str, default="prompts/known_actions-simple.json", help="Action definition file path")
     args = parser.parse_args()
 
     try:
@@ -210,44 +129,7 @@ if __name__ == '__main__':
         if not steps and isinstance(workflow_data, list):
             steps = workflow_data
 
-        # --- Workflow Validation ---
-        print("--- Validating Workflow ---")
-        validation_failed = False
-        
-        duplicate_sids = find_duplicate_sids(steps)
-        if duplicate_sids:
-            print(f"Error: Found duplicate SIDs: {duplicate_sids}", file=sys.stderr)
-            validation_failed = True
-
-        broken_links = find_broken_links(steps)
-        if broken_links:
-            print(f"Error: Found broken links: {broken_links}", file=sys.stderr)
-            validation_failed = True
-
-        unreachable_steps = find_unreachable_steps(steps)
-        if unreachable_steps:
-            print(f"Warning: Found unreachable steps: {unreachable_steps}", file=sys.stderr)
-
-        invalid_step_types = verify_step_types(steps)
-        if invalid_step_types:
-            print(f"Error: Found invalid step types: {invalid_step_types}", file=sys.stderr)
-            validation_failed = True
-
-        invalid_collections = verify_collection_values(steps)
-        if invalid_collections:
-            print(f"Error: Found invalid collection values: {invalid_collections}", file=sys.stderr)
-            validation_failed = True
-            
-        missing_keys = detect_missing_keys(steps)
-        if missing_keys:
-            print(f"Error: Found steps with missing keys: {missing_keys}", file=sys.stderr)
-            validation_failed = True
-
-        if validation_failed:
-            print("Workflow validation failed. Aborting.", file=sys.stderr)
-            sys.exit(1)
-        else:
-            print("Workflow validation successful.")
+        check_after_llm(steps)
 
         # --- Sub-workflow Extraction ---
         print("\n--- Extracting Sub-workflows ---")
@@ -255,7 +137,49 @@ if __name__ == '__main__':
         sub_workflows = extract_subflows_llm(steps, args, router)
 
         if sub_workflows:
-            print(json.dumps(sub_workflows, indent=2))
+            # --- Database and Duplicate Check ---
+            model, collection = initialize_db(disable_db=False)
+            
+            existing_subflow_docs = get_all_subflows(collection)
+            existing_subflows = []
+            for doc in existing_subflow_docs:
+                try:
+                    existing_subflows.append(json.loads(doc))
+                except json.JSONDecodeError:
+                    print(f"Warning: Could not parse a document from the database.", file=sys.stderr)
+
+            # Create the subflows directory if it doesn't exist
+            if not os.path.exists('subflows'):
+                os.makedirs('subflows')
+
+            for sub_workflow in sub_workflows:
+                is_duplicate = False
+                for existing_workflow in existing_subflows:
+                    if sub_workflow.get('steps') == existing_workflow.get('steps'):
+                        is_duplicate = True
+                        print(f"Sub-workflow '{sub_workflow.get('name')}' is a duplicate of an existing sub-workflow in DB. Skipping.")
+                        break
+                
+                if not is_duplicate:
+                    # --- Save to File ---
+                    name = sub_workflow.get("name", "unnamed_sub_workflow")
+                    base_filename = name.lower().replace(" ", "_")
+                    filename = base_filename + ".json"
+                    filepath = os.path.join('subflows', filename)
+
+                    counter = 1
+                    while os.path.exists(filepath):
+                        filename = f"{base_filename}_{counter}.json"
+                        filepath = os.path.join('subflows', filename)
+                        counter += 1
+                    
+                    with open(filepath, 'w') as f:
+                        json.dump(sub_workflow, f, indent=2)
+                    print(f"Saved new sub-workflow '{name}' to {filepath}")
+
+                    # --- Register in DB ---
+                    register_subflow_in_db(collection, model, sub_workflow)
+
         else:
             print("Failed to extract sub-workflows.", file=sys.stderr)
             sys.exit(1)
