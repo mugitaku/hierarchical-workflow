@@ -132,8 +132,7 @@ def find_broken_links(steps):
     This is distinct from an "unreachable step," which has no incoming links.
     """
     all_sids = get_all_sids(steps)
-    # "" and "end" are considered valid terminal SIDs.
-    all_sids.add("end")
+    # "" is considered valid terminal SIDs.
     all_sids.add("")
     
     broken_links = []
@@ -383,3 +382,106 @@ def generate_diagram_for_file(filename, title, args):
             print(f"❌ An unexpected error occurred during diagram generation for {title}: {e}")
     else:
         print(f"❌ '{diagram_script}' not found in the current directory.")
+
+def detect_missing_keys(steps):
+    """
+    Detects steps that are missing required keys based on their step_type.
+    """
+    missing_key_errors = []
+
+    def check_step_keys_recursive(step_list):
+        if not isinstance(step_list, list):
+            return
+            
+        for step in step_list:
+            sid = step.get('sid', 'N/A')
+            step_type = step.get('step_type')
+
+            required_keys = ['sid', 'step_type']
+            if step_type == 'action':
+                required_keys.extend(['action', 'next_sid'])
+            elif step_type == 'branch':
+                required_keys.extend(['condition', 'next_sid_if_true', 'next_sid_if_false'])
+            elif step_type == 'for_loop':
+                required_keys.extend(['iterator', 'collection', 'steps', 'next_sid'])
+            
+            missing_keys = [key for key in required_keys if key not in step]
+            
+            if missing_keys:
+                missing_key_errors.append({
+                    "sid": sid,
+                    "step_type": step_type,
+                    "missing_keys": missing_keys
+                })
+
+            if step_type == 'for_loop' and 'steps' in step:
+                check_step_keys_recursive(step['steps'])
+
+    check_step_keys_recursive(steps)
+    if missing_key_errors:
+        print(f"  [Info] Found {len(missing_key_errors)} steps with missing keys.")
+    return missing_key_errors
+
+def check_after_llm(steps):
+    def normalize_sids_and_next_sids(steps):
+        if not isinstance(steps, list):
+            return
+
+        keys_to_clean = ["sid", "next_sid", "next_sid_if_true", "next_sid_if_false"]
+
+        for step in steps:
+            # 1. Ensure 'next_sid' exists for 'action' steps
+            if step.get('step_type') == 'action' and 'next_sid' not in step:
+                step['next_sid'] = ""
+
+            # 2. Clean spaces from relevant sid fields
+            for key in keys_to_clean:
+                if key in step and isinstance(step[key], str):
+                    step[key] = step[key].replace(" ", "_")
+
+            # Recurse into nested steps if it's a for_loop
+            if step.get('step_type') == 'for_loop' and 'steps' in step:
+                normalize_sids_and_next_sids(step['steps'])
+
+    def validation(steps):
+        # --- Workflow Validation ---
+        print("--- Validating Workflow ---")
+        validation_failed = False
+        
+        duplicate_sids = find_duplicate_sids(steps)
+        if duplicate_sids:
+            print(f"Error: Found duplicate SIDs: {duplicate_sids}", file=sys.stderr)
+            validation_failed = True
+
+        broken_links = find_broken_links(steps)
+        if broken_links:
+            print(f"Error: Found broken links: {broken_links}", file=sys.stderr)
+            validation_failed = True
+
+        unreachable_steps = find_unreachable_steps(steps)
+        if unreachable_steps:
+            print(f"Warning: Found unreachable steps: {unreachable_steps}", file=sys.stderr)
+
+        invalid_step_types = verify_step_types(steps)
+        if invalid_step_types:
+            print(f"Error: Found invalid step types: {invalid_step_types}", file=sys.stderr)
+            validation_failed = True
+
+        invalid_collections = verify_collection_values(steps)
+        if invalid_collections:
+            print(f"Error: Found invalid collection values: {invalid_collections}", file=sys.stderr)
+            validation_failed = True
+            
+        missing_keys = detect_missing_keys(steps)
+        if missing_keys:
+            print(f"Error: Found steps with missing keys: {missing_keys}", file=sys.stderr)
+            validation_failed = True
+
+        if validation_failed:
+            print("Workflow validation failed.", file=sys.stderr)
+        else:
+            print("Workflow validation successful.")
+    
+    normalize_sids_and_next_sids(steps)
+    validation(steps)
+    return steps
