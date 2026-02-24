@@ -13,8 +13,10 @@ def generate_workflow(sys_prompt, user_prompt_origin, action_limited, action_typ
         action_limited_decomp=True
         action_types_decomp=['primitive2']
     else:
-        action_limited_decomp=True
-        action_types_decomp=['primitive2', 'complex']
+        #action_limited_decomp=True
+        #action_types_decomp=['primitive2', 'complex']
+        action_limited_decomp=False
+        action_types_decomp=['primitive2']
 
     decomp_prompt = f"""
     <INSTRUCTIONS>
@@ -35,6 +37,7 @@ def generate_workflow(sys_prompt, user_prompt_origin, action_limited, action_typ
     subtask1, subtask2, ...
     </OUTPUT_FORMAT>
     """
+    print("■decomp_prompt:", decomp_prompt)
     
     try:
         decomp_resp = completion_with_backoff(
@@ -72,8 +75,7 @@ def generate_workflow(sys_prompt, user_prompt_origin, action_limited, action_typ
 Refer to the following subtask candidates and the steps of workflow candidates.
 The object names are generalized, so adapt them to your task to make a specific and executable workflow.
 
-If there are multiple objects in your environment that correspond to the generalized object name, 
-include each path using those objects in your workflow to ensure executability.
+If there are multiple objects in your environment that correspond to the generalized object name, include each path using those objects in your workflow to ensure executability.
 
 subtask candidates: {subtasks}
 
@@ -91,8 +93,7 @@ workflow candidates:
 Refer to the following subtask candidates.
 The object names are generalized, so adapt them to your task to make a specific and executable workflow.
 
-If there are multiple objects in your environment that correspond to the generalized object name, 
-include each path using those objects in your workflow to ensure executability.
+If there are multiple objects in your environment that correspond to the generalized object name, include each path using those objects in your workflow to ensure executability.
 
 subtask candidates: {subtasks}
 
@@ -110,7 +111,7 @@ subtask candidates: {subtasks}
             temperature=args.temperature,
             router=router
         )
-        #print("■sys_prompt:", sys_prompt)
+        print("■sys_prompt:", sys_prompt)
         print("■user_prompt:", user_prompt)
         
         response_content = response['choices'][0]['message']['content']
