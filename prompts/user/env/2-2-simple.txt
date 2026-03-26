@@ -1,24 +1,27 @@
 # LOCATIONS
+The facilities are deactivated, so you need to activate them to use them.
+The facilities are not movable.
+
 * bathroom:
-- available facilities: sink, toilet, bathtub
+  - available facilities: sink, toilet, bathtub
 * bedroom:
-- available facilities: bed, table, closet, bookshelf
+  - available facilities: bed, table, closet, bookshelf
 * living room:
-- available facilities: couch, chair, table, bookshelf
+  - available facilities: couch, chair, table, bookshelf
 * kitchen:
-- available facilities: sink, stove, fridge, freezer, oven, cupboard, counter, chair
+  - available facilities: sink, stove, fridge, freezer, oven, cupboard, counter, chair
 * workshop:
-- available facilities: table, ultra low temperature freezer
+  - available facilities: table, ultra low temperature freezer
 * greenhouse:
-- available facilities: beehive, sink
+  - available facilities: beehive, sink
 * art studio:
-- available facilities: table, large cupboard
+  - available facilities: table, large cupboard
 * outside:
-- available facilities: fire pit, fountain, wood
+  - available facilities: fire pit, fountain, wood
 * foundry:
-- available facilities: blast furnace, sink, table
+  - available facilities: blast furnace, sink, table
 * hallway:
-- available facilities:
+  - available facilities:
 
 
 # OBJECTS
