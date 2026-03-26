@@ -1,7 +1,7 @@
 
-Determine which of the two inclined planes has the most friction.
+Determine which of the two inclined planes (paper, cloth) has the most friction.
 
 ## Task steps
-1. Measure the frictional force of {inclined plane 1}.
-2. Measure the frictional force of {inclined plane 2}.
+1. Measure the frictional force of inclined plane with a paper surface.
+2. Measure the frictional force of inclined plane with a cotton cloth surface.
 3. Focus on the inclined plane where the frictional force is stronger, based on the measurement results.
