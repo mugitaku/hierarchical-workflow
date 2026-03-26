@@ -1,8 +1,43 @@
-Agent:
-  inventory: []
-
-
 Object_list:
+The agent can use deactivated objects by activating it.
+
+  - id: "sink"
+    location: "bathroom"
+    status: "deactivated"
+
+  - id: "toilet"
+    location: "bathroom"
+
+  - id: "bathtub"
+    location: "bathroom"
+    status: "deactivated"
+
+  - id: "bed"
+    location: "bedroom"
+
+  - id: "table"
+    location: "bedroom"
+
+  - id: "closet"
+    location: "bedroom"
+    type: ["container", "unmovable", "openable", "closable"]
+    status: "closed"
+
+  - id: "bookshelf"
+    location: "bedroom"
+
+  - id: "couch"
+    location: "living room"
+
+  - id: "chair"
+    location: "living room"
+
+  - id: "table"
+    location: "living room"
+
+  - id: "bookshelf"
+    location: "living room"
+
   - id: "sink"
     location: "kitchen"
     status: "deactivated"
@@ -15,95 +50,107 @@ Object_list:
     location: "kitchen"
     status: "deactivated"
 
-  - id: "cupboard"
+  - id: "counter"
     location: "kitchen"
+
+  - id: "chair"
+    location: "kitchen"
+
+  - id: "table"
+    location: "workshop"
+
+  - id: "ultra low temperature freezer"
+    location: "workshop"
+    type: ["container", "unmovable", "openable", "closable"]
     status: "closed"
-    contains:
-      - id: "marshmallow"
-        status: "solid"
-        location: "kitchen"
 
-      - id: "metal pot"
-        location: "kitchen"
-
-  - id: "freezer"
-    location: "kitchen"
+  - id: "bee hive"
+    location: "greenhouse"
     status: "closed"
-    contains:
-      - id: "ceramic cup"
-        location: "kitchen"
-        contains:
-          - id: "ice cream"
-            status: "solid"
-            location: "kitchen"
 
-  - id: "fridge"
-    location: "kitchen"
+  - id: "sink"
+    location: "greenhouse"
+    status: "deactivated"
+
+  - id: "table"
+    location: "art studio"
+
+  - id: "large cupboard"
+    location: "art studio"
+    type: ["container", "unmovable", "openable", "closable"]
     status: "closed"
-    contains:
-      - id: "wood cup"
-        location: "kitchen"
-        contains:
-          - id: "orange juice"
-            location: "kitchen"
-            status: "liquid"
 
-      - id: "glass cup"
-        location: "kitchen"
-        contains:
-          - id: "apple juice"
-            location: "kitchen"
-            status: "liquid"
+  - id: "fire pit"
+    location: "outside"
+    type: ["container", "movable", "opened", "unclosable"]
 
-      - id: "chocolate"
-        location: "kitchen"
-        status: "solid"
+  - id: "fountain"
+    location: "outside"
 
-  - id: "soap"
-    location: "kitchen"
-
-  - id: "jug"
-    location: "workshop"
-    contains:
-      - id: "Lead"
-        status: "solid"
-        location: "workshop"
-
-  - id: "metal pot"
-    location: "workshop"
-    contains:
-      - id: "Tin"
-        status: "solid"
-        location: "workshop"
-
-  - id: "glass cup"
-    location: "workshop"
-    contains:
-      - id: "Mercury"
-        status: "solid"
-        location: "workshop"
-
-  - id: "glass cup"
-    location: "workshop"
-    contains:
-      - id: "Gallium"
-        status: "solid"
-        location: "workshop"
-
-  - id: "ceramic cup"
-    location: "workshop"
-    contains:
-      - id:"Caesium"
-        status: "solid"
-        location: "workshop"
-
-  - id: "rubber"
-    location: "workshop"
+  - id: "wood"
+    location: "outside"
 
   - id: "blast furnace"
     location: "foundry"
-    status: ["deactivated", "closed"]
+    status: "deactivated"
 
   - id: "sink"
     location: "foundry"
     status: "deactivated"
+
+  - id: "table"
+    location: "foundry"
+
+  - id: "cupboard"
+    location: "kitchen"
+    type: ["container", "unmovable", "openable", "closable"]
+    status: "closed"
+      - id: "metal pot"
+        location: "kitchen"
+        type: ["container", "movable", "opened", "unclosable"]
+
+  - id: "freezer"
+    location: "kitchen"
+    type: ["container", "unmovable", "openable", "closable"]
+    status: "closed"
+    contains:
+      - id: "ceramic cup"
+        location: "kitchen"
+        type: ["container", "movable", "opened", "unclosable"]
+
+  - id: "fridge"
+    location: "kitchen"
+    type: ["container", "unmovable", "openable", "closable"]
+    status: "closed"
+    contains:
+      - id: "wood cup"
+        location: "kitchen"
+        type: ["container", "movable", "opened", "unclosable"]
+
+      - id: "glass cup"
+        location: "kitchen"
+        type: ["container", "movable", "opened", "unclosable"]
+
+  - id: "jug"
+    location: "workshop"
+    type: ["container", "movable", "opened", "unclosable"]
+
+  - id: "metal pot"
+    location: "workshop"
+    type: ["container", "movable", "opened", "unclosable"]
+
+  - id: "glass cup"
+    location: "workshop"
+    type: ["container", "movable", "opened", "unclosable"]
+
+  - id: "glass cup"
+    location: "workshop"
+    type: ["container", "movable", "opened", "unclosable"]
+
+  - id: "ceramic cup"
+    location: "workshop"
+    type: ["container", "movable", "opened", "unclosable"]
+
+
+# AGENT
+* inventory: []
