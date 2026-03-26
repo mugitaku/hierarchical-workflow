@@ -32,7 +32,7 @@
   {
     "action": "dunk",
     "example": "dunk <obj1> in <obj2>",
-    "description": "dunk <obj1> in <obj2>",
+    "description": "dunk <obj1> in <obj2>. Only fluid is allowed as <obj2>",
     "type": "primitive2"
   },
   {
@@ -128,7 +128,7 @@
   {
     "action": "task complete",
     "example": "task complete",
-    "description": "Declare task completion. The step is the destination of this workflow.",
+    "description": "Declare task completion. The step is the destination of this workflow, so the action can be used only once.",
     "type": "milestone"
   },
   {
