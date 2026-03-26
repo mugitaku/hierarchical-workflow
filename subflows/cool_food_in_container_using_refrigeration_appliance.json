@@ -1,0 +1,79 @@
+{
+  "name": "cool food in container using refrigeration appliance",
+  "steps": [
+    {
+      "sid": "move_food_to_container",
+      "step_type": "action",
+      "action": "move food to container",
+      "next_sid": "look_at_food_in_container_1"
+    },
+    {
+      "sid": "look_at_food_in_container_1",
+      "step_type": "action",
+      "action": "look at food in container",
+      "next_sid": "food_in_container_is_liquid_1"
+    },
+    {
+      "sid": "food_in_container_is_liquid_1",
+      "step_type": "branch",
+      "condition": "food in container is liquid",
+      "next_sid_if_true": "open_refrigeration_appliance_1",
+      "next_sid_if_false": "move_container_to_heater"
+    },
+    {
+      "sid": "open_refrigeration_appliance_1",
+      "step_type": "action",
+      "action": "open refrigeration appliance",
+      "next_sid": "move_food_to_refrigeration_appliance"
+    },
+    {
+      "sid": "move_food_to_refrigeration_appliance",
+      "step_type": "action",
+      "action": "move container to refrigeration appliance",
+      "next_sid": "close_refrigeration_appliance_1"
+    },
+    {
+      "sid": "close_refrigeration_appliance_1",
+      "step_type": "action",
+      "action": "close refrigeration appliance",
+      "next_sid": "wait_1"
+    },
+    {
+      "sid": "wait_1",
+      "step_type": "action",
+      "action": "wait",
+      "next_sid": "open_refrigeration_appliance_2"
+    },
+    {
+      "sid": "open_refrigeration_appliance_2",
+      "step_type": "action",
+      "action": "open refrigeration appliance",
+      "next_sid": "look_at_food_in_container_2"
+    },
+    {
+      "sid": "look_at_food_in_container_2",
+      "step_type": "action",
+      "action": "look at food in container",
+      "next_sid": "food_in_container_is_liquid_2"
+    },
+    {
+      "sid": "food_in_container_is_liquid_2",
+      "step_type": "branch",
+      "condition": "food in container is liquid",
+      "next_sid_if_true": "close_refrigeration_appliance_1",
+      "next_sid_if_false": "pick_up_container_1"
+    },
+    {
+      "sid": "pick_up_container_1",
+      "step_type": "action",
+      "action": "pick up container",
+      "next_sid": "close_refrigeration_appliance_2"
+    },
+    {
+      "sid": "close_refrigeration_appliance_2",
+      "step_type": "action",
+      "action": "close refrigeration appliance",
+      "next_sid": "move_sensor_to_food_in_container"
+    }
+  ]
+}
