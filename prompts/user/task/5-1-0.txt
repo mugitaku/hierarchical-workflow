@@ -3,3 +3,6 @@ Grow a plant from apple seed.
 ## task steps
 1. Focus on apple seed.
 2. Make changes to the environment that grow the plant until it reaches the reproduction life stage.
+
+## hint
+Seeds can be found in the kitchen.
