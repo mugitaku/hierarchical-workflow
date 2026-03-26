@@ -64,7 +64,8 @@ def main():
         action_types = ['primitive1', 'primitive2', "milestone"]
     else:
         action_limited = False
-        action_types = ['primitive1', 'primitive2', 'complex', "milestone"]
+        #action_types = ['primitive1', 'primitive2', 'complex', "milestone"]
+        action_types = ['primitive1', 'primitive2', "milestone"]
 
     initial_workflow_obj = generate_workflow(sys_prompt_main, user_prompt_origin, action_limited, action_types, format_content, args, router, local_embed_model, collection)
     initial_steps = normalize_workflow_steps(initial_workflow_obj)
