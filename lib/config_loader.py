@@ -15,6 +15,7 @@ def parse_arguments():
     parser.add_argument("--temperature", type=float, default=0.0)
     parser.add_argument("--max_depth", type=int, default=1, help="Maximum depth of recursive decomposition")
     parser.add_argument("--disable_example", action='store_true', help="Flag to disable few-shot example")
+    parser.add_argument("--disable_decomp", action='store_true', help="Flag to disable task decomposition and DB search")
     parser.add_argument("--disable_db", action='store_true', help="Flag to disable DB search")
     parser.add_argument("--disable_subflow", action='store_true', help="Flag to disable subflow generation")
     parser.add_argument("--generate_diagram", action='store_true', help="Execute diagram.py to generate a workflow diagram upon completion")
