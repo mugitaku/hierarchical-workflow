@@ -6,69 +6,72 @@ from lib.workflow_refinement import refine_workflow_format
 
 def generate_workflow(sys_prompt, user_prompt_origin, action_limited, action_types, format_content, args, router, local_embed_model, collection):
     print(f"\n>>> Starting generation process")
-    # Step 1. Task Decomposition
     reference_info = ""
-    # primitive1 is routine action, so it is not used in subtask decomposition.
-    if args.disable_db:
-        action_limited_decomp=True
-        action_types_decomp=['primitive2']
-    else:
-        #action_limited_decomp=True
-        #action_types_decomp=['primitive2', 'complex']
-        action_limited_decomp=False
-        action_types_decomp=['primitive2']
+    subtasks = []
+    if not args.disable_decomp: 
+        # Step 1. Task Decomposition
+        if args.disable_db:
+            action_limited_decomp=True
+            # primitive1 is routine action, so it is not used in subtask decomposition.
+            action_types_decomp=['primitive2']
+        else:
+            #action_limited_decomp=True
+            #action_types_decomp=['primitive2', 'complex']
 
-    decomp_prompt = f"""
-    <INSTRUCTIONS>
-    List major subtasks to complete the following task: "{user_prompt_origin}"
-    </INSTRUCTIONS>
-    <CONSTRAINTS>
-    * Abstract all the object names of your subtasks 
-        (e.g. "machine" is abstracted to "object", "cup" is abstracted to "container", "stove" is abstracted to "heater", etc)
-    * Subtasks MUST be separated by commas
-    * Subtasks MUST be 15 words or less
-    * The number of subtasks MUST be between 20 and 30
-    * DO NOT use numbering or newlines
-    * DO NOT output thinking process
-    * DO NOT output duplicate subtasks
-    * {load_and_format_actions(args.actions_file, action_limited_decomp, action_types_decomp)}
-    </CONSTRAINTS>
-    <OUTPUT_FORMAT>
-    subtask1, subtask2, ...
-    </OUTPUT_FORMAT>
-    """
-    print("■decomp_prompt:", decomp_prompt)
-    
-    try:
-        decomp_resp = completion_with_backoff(
-            model=args.model,
-            messages=[{"role": "user", "content": decomp_prompt}],
-            temperature=args.temperature,
-            router=router,
-            max_tokens=2048
-        )
-        # Split by comma and deduplicate
-        raw_subtasks_with_duplicates = decomp_resp['choices'][0]['message']['content'].split(',')
-        subtasks = []
-        seen = set()
-        for task in raw_subtasks_with_duplicates:
-            task = task.strip()
-            if task and task not in seen:
-                seen.add(task)
-                subtasks.append(task)
+            # instead of using complex actions, agents can use arbitrary actions
+            action_limited_decomp=False
+            action_types_decomp=['primitive2']
 
-    except Exception as e:
-        print(f"  [Warning] An error occurred during task decomposition (skipping): {e}")
-        subtasks = []
+        decomp_prompt = f"""
+        <INSTRUCTIONS>
+        List major subtasks to complete the following task: "{user_prompt_origin}"
+        </INSTRUCTIONS>
+        <CONSTRAINTS>
+        * Abstract all the object names of your subtasks 
+            (e.g. "machine" is abstracted to "object", "cup" is abstracted to "container", "stove" is abstracted to "heater", etc)
+        * Subtasks MUST be separated by commas
+        * Subtasks MUST be 15 words or less
+        * The number of subtasks MUST be between 20 and 30
+        * DO NOT use numbering or newlines
+        * DO NOT output thinking process
+        * DO NOT output duplicate subtasks
+        * {load_and_format_actions(args.actions_file, action_limited_decomp, action_types_decomp)}
+        </CONSTRAINTS>
+        <OUTPUT_FORMAT>
+        subtask1, subtask2, ...
+        </OUTPUT_FORMAT>
+        """
+        print("■decomp_prompt:", decomp_prompt)
+        
+        try:
+            decomp_resp = completion_with_backoff(
+                model=args.model,
+                messages=[{"role": "user", "content": decomp_prompt}],
+                temperature=args.temperature,
+                router=router,
+                max_tokens=4096
+            )
+            # Split by comma and deduplicate
+            raw_subtasks_with_duplicates = decomp_resp['choices'][0]['message']['content'].split(',')
+            seen = set()
+            for task in raw_subtasks_with_duplicates:
+                task = task.strip()
+                if task and task not in seen:
+                    seen.add(task)
+                    subtasks.append(task)
 
-    # Step 2. DB Search
-    if not args.disable_db:
-        found_subflows, reference_info = search_subflows(collection, local_embed_model, subtasks, args.disable_db)
-    else:
-        found_subflows, reference_info = [], ""
+        except Exception as e:
+            print(f"  [Warning] An error occurred during task decomposition (skipping): {e}")
+            subtasks = []
+
+        # Step 2. DB Search
+        if not args.disable_db:
+            found_subflows, reference_info = search_subflows(collection, local_embed_model, subtasks, args.disable_db)
+        else:
+            found_subflows, reference_info = [], ""
 
     # Step 3. Main Generation
-    if reference_info:
+    if not args.disable_decomp: 
         user_prompt = f"""
 {user_prompt_origin}
 <INSTRUCTIONS>
@@ -85,18 +88,10 @@ workflow candidates:
 {load_and_format_actions(args.actions_file, action_limited, action_types)}
 </INSTRUCTIONS>
     """
-
     else:
         user_prompt = f"""
 {user_prompt_origin}
 <INSTRUCTIONS>
-Refer to the following subtask candidates.
-The object names are generalized, so adapt them to your task to make a specific and executable workflow.
-
-If there are multiple objects in your environment that correspond to the generalized object name, include each path using those objects in your workflow to ensure executability.
-
-subtask candidates: {subtasks}
-
 {load_and_format_actions(args.actions_file, action_limited, action_types)}
 </INSTRUCTIONS>
     """
@@ -131,5 +126,3 @@ subtask candidates: {subtasks}
     except Exception as e:
         print(f"  [Error] An error occurred during the workflow generation API call: {e}")
         return None
-
-
