@@ -3,16 +3,130 @@ Agent:
 
 
 Object_list:
-  - id: "jug"
+The agent can use deactivated objects by activating it.
+
+  - id: "sink"
+    location: "bathroom"
+    status: "deactivated"
+
+  - id: "toilet"
+    location: "bathroom"
+
+  - id: "bathtub"
+    location: "bathroom"
+    status: "deactivated"
+
+  - id: "bed"
+    location: "bedroom"
+
+  - id: "table"
+    location: "bedroom"
+
+  - id: "closet"
+    location: "bedroom"
+    type: ["container", "unmovable", "openable", "closable"]
+    status: "closed"
+
+  - id: "bookshelf"
+    location: "bedroom"
+
+  - id: "couch"
+    location: "living room"
+
+  - id: "chair"
+    location: "living room"
+
+  - id: "table"
+    location: "living room"
+
+  - id: "bookshelf"
+    location: "living room"
+
+  - id: "sink"
+    location: "kitchen"
+    status: "deactivated"
+
+  - id: "stove"
+    location: "kitchen"
+    status: "deactivated"
+
+  - id: "fridge"
+    location: "kitchen"
+    type: ["container", "unmovable", "openable", "closable"]
+    status: "closed"
+
+  - id: "freezer"
+    location: "kitchen"
+    type: ["container", "unmovable", "openable", "closable"]
+    status: "closed"
+
+  - id: "oven"
+    location: "kitchen"
+    status: "deactivated"
+
+  - id: "cupboard"
+    location: "kitchen"
+    type: ["container", "unmovable", "openable", "closable"]
+    status: "closed"
+
+  - id: "counter"
+    location: "kitchen"
+
+  - id: "chair"
+    location: "kitchen"
+
+  - id: "table"
+    location: "workshop"
+
+  - id: "ultra low temperature freezer"
+    location: "workshop"
+    type: ["container", "unmovable", "openable", "closable"]
+    status: "closed"
+
+  - id: "bee hive"
     location: "greenhouse"
-    status: "empty"
+    status: "closed"
 
   - id: "sink"
     location: "greenhouse"
     status: "deactivated"
 
+  - id: "table"
+    location: "art studio"
+
+  - id: "large cupboard"
+    location: "art studio"
+    type: ["container", "unmovable", "openable", "closable"]
+    status: "closed"
+
+  - id: "fire pit"
+    location: "outside"
+    type: ["container", "movable", "opened", "unclosable"]
+
+  - id: "fountain"
+    location: "outside"
+
+  - id: "wood"
+    location: "outside"
+
+  - id: "blast furnace"
+    location: "foundry"
+    status: "deactivated"
+
+  - id: "sink"
+    location: "foundry"
+    status: "deactivated"
+
+  - id: "table"
+    location: "foundry"
+
+  - id: "jug"
+    location: "greenhouse"
+    type: ["container", "movable", "opened", "unclosable"]
+
   - id: "flower pot"
     location: "greenhouse"
+    type: ["container", "movable", "opened", "unclosable"]
     contains:
       - id: "soil"
         location: "greenhouse"
@@ -22,9 +136,7 @@ Object_list:
 
   - id: "seed jar"
     location: "kitchen"
-    contains:
-      - id: "apple seed"
-        location: "kitchen"
+    type: ["container", "movable", "opened", "unclosable"]
 
   - id: "the ground"
     location: "outside"
