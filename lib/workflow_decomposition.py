@@ -60,8 +60,10 @@ The object names and action names in the workflow must be adapted to your task.
                     action_limited=False
                     action_types=['primitive1', 'primitive2']
                 else:
-                    action_limited=True
-                    action_types=['primitive1', 'primitive2', 'complex']
+                    #action_limited=True
+                    #action_types=['primitive1', 'primitive2', 'complex']
+                    action_limited=False
+                    action_types=['primitive1', 'primitive2']
                 
                 sid_to_replace = step.get("sid")
                 next_sid_to_replace = step.get("next_sid")
