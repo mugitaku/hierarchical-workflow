@@ -1,0 +1,193 @@
+{
+  "name": "measure the melting point of chocolate",
+  "steps": [
+    {
+      "sid": "look_around",
+      "step_type": "action",
+      "action": "look around",
+      "next_sid": "loop_rooms"
+    },
+    {
+      "sid": "loop_rooms",
+      "step_type": "for_loop",
+      "iterator": "room",
+      "collection": "all_locations",
+      "steps": [
+        {
+          "sid": "enter_room",
+          "step_type": "action",
+          "action": "go to ${room}",
+          "next_sid": "loop_containers"
+        },
+        {
+          "sid": "loop_containers",
+          "step_type": "for_loop",
+          "iterator": "container",
+          "collection": "all_closed_containers",
+          "steps": [
+            {
+              "sid": "open_container",
+              "step_type": "action",
+              "action": "open ${container}",
+              "next_sid": "check_item"
+            },
+            {
+              "sid": "check_item",
+              "step_type": "branch",
+              "condition": "${object} is available",
+              "next_sid_if_true": "found_break",
+              "next_sid_if_false": "continue_container"
+            },
+            {
+              "sid": "found_break",
+              "step_type": "break"
+            },
+            {
+              "sid": "continue_container",
+              "step_type": "action",
+              "action": "look around",
+              "next_sid": ""
+            }
+          ],
+          "next_sid": "continue_room"
+        },
+        {
+          "sid": "continue_room",
+          "step_type": "action",
+          "action": "look around",
+          "next_sid": ""
+        }
+      ],
+      "next_sid": "move_chocolate_to_metal_pot"
+    },
+    {
+      "sid": "move_chocolate_to_metal_pot",
+      "step_type": "action",
+      "action": "move chocolate to metal pot",
+      "next_sid": "look_at_chocolate_in_metal_pot_1"
+    },
+    {
+      "sid": "look_at_chocolate_in_metal_pot_1",
+      "step_type": "action",
+      "action": "look at chocolate in metal pot",
+      "next_sid": "chocolate_in_metal_pot_is_liquid_1"
+    },
+    {
+      "sid": "chocolate_in_metal_pot_is_liquid_1",
+      "step_type": "branch",
+      "condition": "chocolate in metal pot is liquid",
+      "next_sid_if_true": "open_freezer_1",
+      "next_sid_if_false": "move_metal_pot_to_stove"
+    },
+    {
+      "sid": "open_freezer_1",
+      "step_type": "action",
+      "action": "open freezer",
+      "next_sid": "move_chocolate_to_freezer"
+    },
+    {
+      "sid": "move_chocolate_to_freezer",
+      "step_type": "action",
+      "action": "move metal pot to freezer",
+      "next_sid": "close_freezer_1"
+    },
+    {
+      "sid": "close_freezer_1",
+      "step_type": "action",
+      "action": "close freezer",
+      "next_sid": "wait_1"
+    },
+    {
+      "sid": "wait_1",
+      "step_type": "action",
+      "action": "wait",
+      "next_sid": "open_freezer_2"
+    },
+    {
+      "sid": "open_freezer_2",
+      "step_type": "action",
+      "action": "open freezer",
+      "next_sid": "look_at_chocolate_in_metal_pot_2"
+    },
+    {
+      "sid": "look_at_chocolate_in_metal_pot_2",
+      "step_type": "action",
+      "action": "look at chocolate in metal pot",
+      "next_sid": "chocolate_in_metal_pot_is_liquid_2"
+    },
+    {
+      "sid": "chocolate_in_metal_pot_is_liquid_2",
+      "step_type": "branch",
+      "condition": "chocolate in metal pot is liquid",
+      "next_sid_if_true": "close_freezer_1",
+      "next_sid_if_false": "pick_up_metal_pot_1"
+    },
+    {
+      "sid": "pick_up_metal_pot_1",
+      "step_type": "action",
+      "action": "pick up metal pot",
+      "next_sid": "close_freezer_2"
+    },
+    {
+      "sid": "close_freezer_2",
+      "step_type": "action",
+      "action": "close freezer",
+      "next_sid": "move_thermometer_to_chocolate_in_metal_pot"
+    },
+    {
+      "sid": "move_metal_pot_to_stove",
+      "step_type": "action",
+      "action": "move metal pot to stove",
+      "next_sid": "activate_stove"
+    },
+    {
+      "sid": "activate_stove",
+      "step_type": "action",
+      "action": "activate stove",
+      "next_sid": "wait_2"
+    },
+    {
+      "sid": "wait_2",
+      "step_type": "action",
+      "action": "wait",
+      "next_sid": "look_at_chocolate_in_metal_pot"
+    },
+    {
+      "sid": "look_at_chocolate_in_metal_pot",
+      "step_type": "action",
+      "action": "look at chocolate in metal pot",
+      "next_sid": "chocolate_in_metal_pot_is_liquid_3"
+    },
+    {
+      "sid": "chocolate_in_metal_pot_is_liquid_3",
+      "step_type": "branch",
+      "condition": "chocolate in metal pot is liquid",
+      "next_sid_if_true": "pick_up_metal_pot_2",
+      "next_sid_if_false": "wait_2"
+    },
+    {
+      "sid": "pick_up_metal_pot_2",
+      "step_type": "action",
+      "action": "pick up metal pot",
+      "next_sid": "deactivate_stove"
+    },
+    {
+      "sid": "deactivate_stove",
+      "step_type": "action",
+      "action": "deactivate stove",
+      "next_sid": "move_thermometer_to_chocolate_in_metal_pot"
+    },
+    {
+      "sid": "move_thermometer_to_chocolate_in_metal_pot",
+      "step_type": "action",
+      "action": "move thermometer to chocolate in metal pot",
+      "next_sid": "look_at_thermometer"
+    },
+    {
+      "sid": "look_at_thermometer",
+      "step_type": "action",
+      "action": "look at thermometer",
+      "next_sid": ""
+    }
+  ]
+}

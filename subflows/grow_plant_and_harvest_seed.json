@@ -1,0 +1,195 @@
+{
+  "name": "grow plant and harvest seed",
+  "steps": [
+    {
+      "sid": "move_apple_seed_to_flower_pot_1",
+      "step_type": "action",
+      "action": "move apple seed to flower pot 1",
+      "next_sid": "move_soil_to_flower_pot_1"
+    },
+    {
+      "sid": "move_soil_to_flower_pot_1",
+      "step_type": "action",
+      "action": "move soil to flower pot 1",
+      "next_sid": "move_apple_seed_to_flower_pot_2"
+    },
+    {
+      "sid": "move_apple_seed_to_flower_pot_2",
+      "step_type": "action",
+      "action": "move apple seed to flower pot 2",
+      "next_sid": "move_soil_to_flower_pot_2"
+    },
+    {
+      "sid": "move_soil_to_flower_pot_2",
+      "step_type": "action",
+      "action": "move soil to flower pot 2",
+      "next_sid": "move_cup_to_sink_1"
+    },
+    {
+      "sid": "move_cup_to_sink_1",
+      "step_type": "action",
+      "action": "move cup to sink",
+      "next_sid": "activate_sink_1"
+    },
+    {
+      "sid": "activate_sink_1",
+      "step_type": "action",
+      "action": "activate sink",
+      "next_sid": "wait_1"
+    },
+    {
+      "sid": "wait_1",
+      "step_type": "action",
+      "action": "wait",
+      "next_sid": "deactivate_sink_1"
+    },
+    {
+      "sid": "deactivate_sink_1",
+      "step_type": "action",
+      "action": "deactivate sink",
+      "next_sid": "pick_up_cup_1"
+    },
+    {
+      "sid": "pick_up_cup_1",
+      "step_type": "action",
+      "action": "pick up cup",
+      "next_sid": "pour_cup_into_flower_pot_1_1"
+    },
+    {
+      "sid": "pour_cup_into_flower_pot_1_1",
+      "step_type": "action",
+      "action": "pour cup into flower pot 1",
+      "next_sid": "pour_cup_into_flower_pot_2_1"
+    },
+    {
+      "sid": "pour_cup_into_flower_pot_2_1",
+      "step_type": "action",
+      "action": "pour cup into flower pot 2",
+      "next_sid": "wait_2"
+    },
+    {
+      "sid": "wait_2",
+      "step_type": "action",
+      "action": "wait",
+      "next_sid": "look_at_flower_pot_1_1"
+    },
+    {
+      "sid": "look_at_flower_pot_1_1",
+      "step_type": "action",
+      "action": "look at flower pot 1",
+      "next_sid": "plant_in_flower_pot_1_is_in_adult_stage"
+    },
+    {
+      "sid": "plant_in_flower_pot_1_is_in_adult_stage",
+      "step_type": "branch",
+      "condition": "plant in flower pot 1 is in adult stage",
+      "next_sid_if_true": "look_at_flower_pot_2_1",
+      "next_sid_if_false": "move_cup_to_sink_1"
+    },
+    {
+      "sid": "look_at_flower_pot_2_1",
+      "step_type": "action",
+      "action": "look at flower pot 2",
+      "next_sid": "plant_in_flower_pot_2_is_in_adult_stage"
+    },
+    {
+      "sid": "plant_in_flower_pot_2_is_in_adult_stage",
+      "step_type": "branch",
+      "condition": "plant in flower pot 2 is in adult stage",
+      "next_sid_if_true": "open_bee_hive",
+      "next_sid_if_false": "move_cup_to_sink_1"
+    },
+    {
+      "sid": "open_bee_hive",
+      "step_type": "action",
+      "action": "open bee hive",
+      "next_sid": "move_cup_to_sink_2"
+    },
+    {
+      "sid": "move_cup_to_sink_2",
+      "step_type": "action",
+      "action": "move cup to sink",
+      "next_sid": "activate_sink_2"
+    },
+    {
+      "sid": "activate_sink_2",
+      "step_type": "action",
+      "action": "activate sink",
+      "next_sid": "wait_3"
+    },
+    {
+      "sid": "wait_3",
+      "step_type": "action",
+      "action": "wait",
+      "next_sid": "deactivate_sink_2"
+    },
+    {
+      "sid": "deactivate_sink_2",
+      "step_type": "action",
+      "action": "deactivate sink",
+      "next_sid": "pick_up_cup_2"
+    },
+    {
+      "sid": "pick_up_cup_2",
+      "step_type": "action",
+      "action": "pick up cup",
+      "next_sid": "pour_cup_into_flower_pot_1_2"
+    },
+    {
+      "sid": "pour_cup_into_flower_pot_1_2",
+      "step_type": "action",
+      "action": "pour cup into flower pot 1",
+      "next_sid": "pour_cup_into_flower_pot_2_2"
+    },
+    {
+      "sid": "pour_cup_into_flower_pot_2_2",
+      "step_type": "action",
+      "action": "pour cup into flower pot 2",
+      "next_sid": "wait_4"
+    },
+    {
+      "sid": "wait_4",
+      "step_type": "action",
+      "action": "wait",
+      "next_sid": "look_at_flower_pot_1_2"
+    },
+    {
+      "sid": "look_at_flower_pot_1_2",
+      "step_type": "action",
+      "action": "look at flower pot 1",
+      "next_sid": "plant_in_flower_pot_1_is_in_reproducing_stage"
+    },
+    {
+      "sid": "plant_in_flower_pot_1_is_in_reproducing_stage",
+      "step_type": "branch",
+      "condition": "plant in flower pot 1 is in reproducing stage",
+      "next_sid_if_true": "look_at_flower_pot_2_2",
+      "next_sid_if_false": "move_cup_to_sink_2"
+    },
+    {
+      "sid": "look_at_flower_pot_2_2",
+      "step_type": "action",
+      "action": "look at flower pot 2",
+      "next_sid": "plant_in_flower_pot_2_is_in_reproducing_stage"
+    },
+    {
+      "sid": "plant_in_flower_pot_2_is_in_reproducing_stage",
+      "step_type": "branch",
+      "condition": "plant in flower pot 2 is in reproducing stage",
+      "next_sid_if_true": "pick_up_seed_in_flower_pot_1",
+      "next_sid_if_false": "move_cup_to_sink_2"
+    },
+    {
+      "sid": "pick_up_seed_in_flower_pot_1",
+      "step_type": "action",
+      "action": "pick up seed in flower pot 1",
+      "next_sid": "pick_up_seed_in_flower_pot_2"
+    },
+    {
+      "sid": "pick_up_seed_in_flower_pot_2",
+      "step_type": "action",
+      "action": "pick up seed in flower pot 2",
+      "next_sid": ""
+    }
+  ]
+}
