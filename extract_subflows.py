@@ -28,6 +28,7 @@ A "sub-workflow" is a self-contained sequence of steps that achieves a specific 
 
 Follow these steps:
 1. extract reusable sub-workflows from the original workflow
+    * Each sub-workflow must contain multiple steps.
 2. add a unique "name" key for each sub-workflow whose value describes its purpose as specific as possible. 
     * Each name MUST be between 4 and 15 words.
     * The base form of a verb must be used at the beginning of the name.
