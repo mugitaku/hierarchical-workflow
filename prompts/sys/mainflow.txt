@@ -17,11 +17,6 @@ Here is an example of conditional branch for executability:
 {"sid": "machine_2", "step_type": "action", "action": "use machine 2", "next_sid": "pick_up_product"}
 
 
-# Variables in Variable_list
-All the values of the variable must be covered in the workflow. You can use conditional branch to cover each value.
-If workflows for each variable value are the same, you can use the variable name to integrate them.
-
-
 # The ways various phenomena are simulated in the environment
 * Heat Transfer
 - Heat is transferred between two objects in contact with each other as each unit of time elapses.
