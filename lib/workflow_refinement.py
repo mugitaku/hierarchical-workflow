@@ -50,7 +50,8 @@ Here is an example of conditional branch for executability:
 </INSTRUCTIONS>
 
 <CONSTRAINTS>
-{action_list_refine_content}
+* Do not simplify the workflow
+* {action_list_refine_content}
 </CONSTRAINTS>
 
 {user_prompt_origin}
@@ -60,6 +61,8 @@ Here is an example of conditional branch for executability:
 {workflow_json_str}
 </WORKFLOW>
 """
+    print("■refine_prompt:", refine_prompt)
+
     try:
         response = completion_with_backoff(
             model=args.model,
@@ -102,6 +105,7 @@ Follow these instructions:
 </INSTRUCTIONS>
 
 <CONSTRAINTS>
+* Do not simplify the workflow
 * Do not remove conditional branches from the workflow
 * {action_list_refine_content}
 </CONSTRAINTS>
@@ -113,6 +117,7 @@ Follow these instructions:
 {workflow_json_str}
 </WORKFLOW>
 """
+    print("■refine_prompt:", refine_prompt)
 
     try:
         response = completion_with_backoff(
