@@ -20,7 +20,7 @@
   {
     "action": "dunk",
     "example": "dunk <obj1> in <obj2>",
-    "description": "dunk <obj1> in <obj2>",
+    "description": "dunk <obj1> in <obj2>. Only fluid is allowed as <obj2>",
     "type": "primitive2"
   },
   {
