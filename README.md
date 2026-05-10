@@ -1,3 +1,5 @@
+This uses [LiteLLM](https://docs.litellm.ai/).
+
 # generate workflow
 python workflow_generator.py \
 	--model groq/openai/gpt-oss-120b \
