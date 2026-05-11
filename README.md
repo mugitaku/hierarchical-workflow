@@ -1,4 +1,4 @@
-This uses [LiteLLM](https://docs.litellm.ai/).
+This prject uses [LiteLLM](https://docs.litellm.ai/).
 
 # generate workflow
 python workflow_generator.py \
