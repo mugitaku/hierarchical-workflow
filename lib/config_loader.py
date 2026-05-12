@@ -13,7 +13,7 @@ def parse_arguments():
     parser.add_argument("--example_file", type=str, default="prompts/sys/example.txt", help="System Prompt for few shot example")
     parser.add_argument("--actions_file", type=str, default="prompts/known_actions-simple.json", help="Action definition file path")
     parser.add_argument("--temperature", type=float, default=0.0)
-    parser.add_argument("--max_depth", type=int, default=1, help="Maximum depth of recursive decomposition")
+    parser.add_argument("--max_depth", type=int, default=2, help="Maximum depth of recursive decomposition")
     parser.add_argument("--disable_example", action='store_true', help="Flag to disable few-shot example")
     parser.add_argument("--disable_decomp", action='store_true', help="Flag to disable task decomposition and DB search")
     parser.add_argument("--disable_db", action='store_true', help="Flag to disable DB search")
