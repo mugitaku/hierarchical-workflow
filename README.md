@@ -14,6 +14,8 @@ python workflow_generator.py \
 	--max_depth 1 \
 	--generate_diagram \
 
+When you set max_depth=0, subflow is not created.
+
 ## model
 	--model groq/moonshotai/kimi-k2-instruct-0905 \
 	--model openrouter/moonshotai/kimi-k2:free \
