@@ -30,6 +30,6 @@ Here is an example of conditional branch for executability:
 </INSTRUCTIONS>
 
 <CONSTRAINTS>
-* DO NOT output thinking process.
-* Keep the number of steps below 50.
+* think step-by-step, but DO NOT output thinking process
+* Keep the number of steps below 30
 </CONSTRAINTS>
