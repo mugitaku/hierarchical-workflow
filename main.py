@@ -56,7 +56,7 @@ def main():
     # 3. Initial Workflow Generation
     print("=== Phase 1: Initial Workflow Generation ===")
 
-    if args.disable_subflow:
+    if args.max_depth == 0:
         action_limited = True
         action_types = ['primitive1', 'primitive2', "milestone"]
     elif args.disable_db:
@@ -80,7 +80,7 @@ def main():
     write_workflow_to_txt(initial_filename, initial_workflow_wrapped, "Initial Workflow", args)
     generate_diagram_for_file(initial_filename, "Initial", args)
     
-    if args.disable_subflow:
+    if args.max_depth == 0:
         final_steps = initial_steps
         pre_refined_final_steps = initial_steps
     else:
