@@ -11,7 +11,7 @@ def generate_workflow(sys_prompt, user_prompt_origin, action_limited, action_typ
     if not args.disable_decomp: 
         # Step 1. Task Decomposition
         if args.disable_db:
-            action_limited_decomp=True
+            action_limited_decomp=False
             # primitive1 is routine action, so it is not used in subtask decomposition.
             action_types_decomp=['primitive2']
         else:
@@ -31,7 +31,7 @@ def generate_workflow(sys_prompt, user_prompt_origin, action_limited, action_typ
             (e.g. "machine" is abstracted to "object", "cup" is abstracted to "container", "stove" is abstracted to "heater", etc)
         * Subtasks MUST be separated by commas
         * Subtasks MUST be 15 words or less
-        * The number of subtasks MUST be between 20 and 30
+        * Keep the number of subtasks below 30
         * DO NOT use numbering or newlines
         * DO NOT output thinking process
         * DO NOT output duplicate subtasks
@@ -49,7 +49,7 @@ def generate_workflow(sys_prompt, user_prompt_origin, action_limited, action_typ
                 messages=[{"role": "user", "content": decomp_prompt}],
                 temperature=args.temperature,
                 router=router,
-                max_tokens=4096
+                max_tokens=512
             )
             # Split by comma and deduplicate
             raw_subtasks_with_duplicates = decomp_resp['choices'][0]['message']['content'].split(',')
@@ -119,9 +119,9 @@ workflow candidates:
         steps = normalize_workflow_steps(data)
         
         # Perform initial format refinement
-        refined_steps = refine_workflow_format(steps, user_prompt_origin, action_limited, action_types, format_content, args, router)
+        #refined_steps = refine_workflow_format(steps, user_prompt_origin, action_limited, action_types, format_content, args, router)
         
-        return refined_steps
+        return steps
 
     except Exception as e:
         print(f"  [Error] An error occurred during the workflow generation API call: {e}")
