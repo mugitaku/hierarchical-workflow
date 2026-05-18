@@ -13,11 +13,10 @@ def parse_arguments():
     parser.add_argument("--example_file", type=str, default="prompts/sys/example.txt", help="System Prompt for few shot example")
     parser.add_argument("--actions_file", type=str, default="prompts/known_actions-simple.json", help="Action definition file path")
     parser.add_argument("--temperature", type=float, default=0.0)
-    parser.add_argument("--max_depth", type=int, default=2, help="Maximum depth of recursive decomposition")
+    parser.add_argument("--max_depth", type=int, default=1, help="Maximum depth of recursive decomposition")
     parser.add_argument("--disable_example", action='store_true', help="Flag to disable few-shot example")
     parser.add_argument("--disable_decomp", action='store_true', help="Flag to disable task decomposition and DB search")
     parser.add_argument("--disable_db", action='store_true', help="Flag to disable DB search")
-    parser.add_argument("--disable_subflow", action='store_true', help="Flag to disable subflow generation")
     parser.add_argument("--generate_diagram", action='store_true', help="Execute diagram.py to generate a workflow diagram upon completion")
     return parser.parse_args()
 
@@ -38,9 +37,10 @@ def load_and_format_actions(filepath, action_limited=False, action_types=None):
         if action_types:
             actions_data = [item for item in actions_data if item.get('type') in action_types]
 
-        header = "You can use only the following actions in action steps:\n" if action_limited else "You can use the following and other arbitrary actions in action steps:\n"
+        header = "You can use only the following actions in action steps:\n" if action_limited else "The following list is example of actions.:\n"
         actions_str = "".join([f"* {item['example']}: {item['description']}\n" for item in actions_data])
         return header + actions_str
+        
     except Exception as e:
         print(f"Error loading action list: {e}")
         return ""
