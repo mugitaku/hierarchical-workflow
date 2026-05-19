@@ -49,7 +49,7 @@ def generate_workflow(sys_prompt, user_prompt_origin, action_limited, action_typ
                 messages=[{"role": "user", "content": decomp_prompt}],
                 temperature=args.temperature,
                 router=router,
-                max_tokens=1024
+                max_tokens=512
             )
             # Split by comma and deduplicate
             raw_subtasks_with_duplicates = decomp_resp['choices'][0]['message']['content'].split(',')
@@ -63,6 +63,8 @@ def generate_workflow(sys_prompt, user_prompt_origin, action_limited, action_typ
         except Exception as e:
             print(f"  [Warning] An error occurred during task decomposition (skipping): {e}")
             subtasks = []
+
+        print("■decomp_resp:", decomp_resp['choices'][0]['message']['content'])
 
         # Step 2. DB Search
         if not args.disable_db:
@@ -89,7 +91,6 @@ workflow candidates:
 </INSTRUCTIONS>
     """
     else:
-
         user_prompt = f"""
 {user_prompt_origin}
 <INSTRUCTIONS>
