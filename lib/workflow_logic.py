@@ -49,7 +49,7 @@ def generate_workflow(sys_prompt, user_prompt_origin, action_limited, action_typ
                 messages=[{"role": "user", "content": decomp_prompt}],
                 temperature=args.temperature,
                 router=router,
-                max_tokens=512
+                max_tokens=1024
             )
             # Split by comma and deduplicate
             raw_subtasks_with_duplicates = decomp_resp['choices'][0]['message']['content'].split(',')
@@ -89,6 +89,7 @@ workflow candidates:
 </INSTRUCTIONS>
     """
     else:
+
         user_prompt = f"""
 {user_prompt_origin}
 <INSTRUCTIONS>
