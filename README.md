@@ -1,4 +1,5 @@
-This project uses [LiteLLM](https://docs.litellm.ai/).
+# Setup
+pip install -r requirements.txt
 
 # generate workflow
 python workflow_generator.py \
