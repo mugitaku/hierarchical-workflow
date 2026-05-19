@@ -1,5 +1,11 @@
-# Setup
+# Installation
+
+Install the required Python packages:
+```bash
 pip install -r requirements.txt
+```
+
+**Note**: To generate diagrams using `--generate_diagram`, you must also install the system-level Graphviz package (e.g., `sudo apt install graphviz` or `conda install -c conda-forge graphviz`).
 
 # generate workflow
 python workflow_generator.py \
